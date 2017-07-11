@@ -1,0 +1,15 @@
+Alg: DFS
+ExitOnFirst
+Max: 35
+Level: 11
+      %%
+   %%%w%%
+  %wwwwww%
+  ww  wwww
+  ww F F w
+   wFwF Fw
+E >G F  ww
+  ^www Fww
+  ^<<wwww
+    ^ ww
+    ^

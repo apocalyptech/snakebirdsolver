@@ -1,0 +1,22 @@
+Decoration 2: 3
+OOO
+| |
+OOO
+Level: Star 6
+
+    E
+
+    w
+00
+w     w
+ww    w
+      ww
+11
+ww
+ww 222ww
+ww    ww
+R<<222
+>>GwwB<<
+wwwwwwww
+wwwwwww
+   www

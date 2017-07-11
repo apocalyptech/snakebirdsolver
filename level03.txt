@@ -1,0 +1,9 @@
+Level: 3
+    E
+>B
+^F    F
+  %
+  %wwwww
+wwww www
+www  www
+ w    ww

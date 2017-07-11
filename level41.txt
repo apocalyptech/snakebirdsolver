@@ -1,0 +1,12 @@
+Max: 34
+Level: 41
+
+    E        w
+             w
+
+ >B    G<   w
+ ^F    F^   ww
+    w       ww
+    w       ww w
+    w       ww w
+

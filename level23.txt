@@ -1,0 +1,21 @@
+Decoration 0: 5
+O
+|
+|
+|
+O
+Level: 23
+         %
+         %%%%%%
+       0 wwwww%
+       111 www%
+>>>>B    wwwwww
+^wwwwww wwwwwww
+^wwwwww0wwwwwww
+^  wE%w     w
+^  w %w  w  w
+^  w %      w
+^  w %      w
+   w % %    w
+   w   w    w
+~~~~~~~~~~~~~~

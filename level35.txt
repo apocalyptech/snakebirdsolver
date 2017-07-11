@@ -1,0 +1,20 @@
+Level: 35
+wwwwwww
+ wwwww
+ wwwww
+
+     w
+     %
+      F
+   T w
+     w
+
+E >>B
+  ^w
+   w
+    T
+   %%
+   F
+   ww
+   ww
+   ww

@@ -1,0 +1,16 @@
+Level: Star 3
+
+          w
+          w
+          w
+          w
+E        000  %
+         0R0
+         0^0
+          ^
+        >B^   %
+    w   ^>>Gw%%
+   ww    %w%%
+
+   ww
+       w

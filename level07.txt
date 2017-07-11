@@ -1,0 +1,14 @@
+ExitOnFirst
+Max: 68
+Level: 7
+      E
+
+   w
+
+w
+w
+w  w   B<<
+   w  G<<^
+      wwww
+
+

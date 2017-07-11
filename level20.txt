@@ -1,0 +1,12 @@
+Max: 50
+Level: 20
+
+          ww
+         wwww
+  >B     wF w
+E >G    F   w
+  ww   w wwww
+  ww%      ww
+  wwww  w  ww
+  www   w  ww
+~~~~~~~~~~~~~

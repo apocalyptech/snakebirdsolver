@@ -1,0 +1,17 @@
+Level: 45
+
+     0
+    %1
+     1
+   w w   E
+   %
+   %
+>>R  %B<<
+^w%%F ww
+ ww   ww
+ w     w
+    F
+
+
+    w
+   %w%

@@ -1,0 +1,19 @@
+Level: 39
+       wwwww
+        wwww
+        wwww
+
+         E
+
+
+       wwww
+       wwww
+        www
+       wwww
+ >>G   wwwww
+ ^00    wwww
+ ^11   wwwww
+wwww  wwwwww
+wwwwww wwwww
+ wwww   w w
+ www    w w

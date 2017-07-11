@@ -1,0 +1,11 @@
+Level: 15
+
+     w
+     w
+     w    E
+
+  w     w
+ >>R
+w^ V
+wG<<
+wwww

@@ -1,0 +1,13 @@
+AllowPushableLoss
+Level: 43
+
+  ww
+  www
+  www  E
+   w
+  B<<
+% >>R %
+  0F0
+  000  w
+  w%w  w
+  www  w

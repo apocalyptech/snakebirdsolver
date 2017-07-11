@@ -1,0 +1,19 @@
+Decoration 0: 3
+O
+|
+O
+Level: 27
+   F
+  ww
+  ww
+  ww
+
+
+%    %
+ww  ww
+%  0 %
+
+>G 0 R<E
+wwwwww^
+wwwwww^
+wwwwww

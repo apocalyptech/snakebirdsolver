@@ -1,0 +1,25 @@
+Decoration 0: 5
+O
+|
+|
+|
+O
+Level: Star 1
+
+
+        w%%%%%
+        w
+        w
+        w %%%%
+  E          %
+
+               B<< w
+ www            0^
+wwww
+wwww           G<<  w
+ ww            R<<<
+                0
+               wwwww
+               wwwww
+                www
+                  w

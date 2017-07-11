@@ -1,0 +1,11 @@
+Level: 4
+  >>G E
+  ^w
+
+w%   %w
+ %
+ %%w%
+   F
+     w
+    ww
+    ww

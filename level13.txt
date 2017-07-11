@@ -1,0 +1,15 @@
+Level: 13
+
+
+    %%%%
+    www%
+    www%   w
+           w
+  E       B<<
+           w^
+           w
+www       G<<
+ www       w^
+           w^
+           w
+           w

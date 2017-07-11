@@ -1,0 +1,15 @@
+Level: Star 5
+wwwwwwwwww
+ 0wwwww w
+ 0     E
+ 0 %   w
+ w ww
+ wT w
+ w  w
+ ww%w
+   T
+
+  >>RV
+  ^B<<
+  wwww
+   ww

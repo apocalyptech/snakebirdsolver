@@ -1,0 +1,23 @@
+Decoration 0: 5
+  O
+  |
+O-+-O
+  |
+  O
+Level: 25
+   E
+
+   w
+
+
+
+
+   0
+  www
+ 0   0
+
+>G 0 B<
+^w   w^
+^w   w
+ w   w
+ w   w

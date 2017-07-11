@@ -1,0 +1,10 @@
+Level: 14
+
+
+        %
+ E   >B 
+     >R w
+     ^w w
+  w   w w
+  w   w w
+  w   w w

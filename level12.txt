@@ -1,0 +1,17 @@
+Max: 68
+Level: 12
+   w
+   w
+   %
+  V B
+  >>^
+   w
+        %
+          E
+%w%  %%%w
+       ww
+
+F   %
+   w%F
+   www
+   www

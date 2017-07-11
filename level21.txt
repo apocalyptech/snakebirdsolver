@@ -1,0 +1,15 @@
+Max: 39
+Level: 21
+
+    E
+    %
+  F w F
+
+
+   >B
+%%%^w  %%
+www^F %%w
+ww ^<  ww
+ww     ww
+ww     ww
+~~~~~~~~~

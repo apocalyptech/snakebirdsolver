@@ -1,0 +1,13 @@
+Level: 31
+
+     wwww
+      ww
+
+         T
+         w
+       G w
+E   T  ^
+    w  ^<
+    wwwwww
+      ww
+

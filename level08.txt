@@ -1,0 +1,8 @@
+Max: 30
+Level: 8
+              E
+
+  >>R        www
+ >^G<<     %%%ww
+wwwwww%%%  %
+ wwwww  %%w%

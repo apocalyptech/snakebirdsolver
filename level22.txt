@@ -1,0 +1,13 @@
+Max: 50
+Level: 22
+    E
+
+
+
+
+ >>R
+  ww   00
+  ww w 00
+  ww   ww
+  wwwwwww
+  wwwwwww

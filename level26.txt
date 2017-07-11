@@ -1,0 +1,12 @@
+Level: 26
+         www
+         wwww
+         %www
+         %
+   F     % E
+B<
+ R       %www
+ ^       %www
+ ^0      %www
+ w%%%%%%%%ww
+ www  wwwwwww
