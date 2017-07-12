@@ -157,7 +157,7 @@ class Snakebird(object):
     tuples in it.  Element zero is the head, element -1 is the tail.
     """
 
-    supported_by_spikes = False
+    can_exit = True
 
     def __init__(self, color, level):
         self.color = color
@@ -212,71 +212,57 @@ class Snakebird(object):
         """
         return '{}{}'.format(color_snake[self.color], self.display_chars[idx])
 
-    def get_possible_moves(self):
+    def push(self, direction, calling_snake, seen_snakes):
         """
-        Returns a list of possible moves for us
+        We were pushed in the specified direction.  Will recursively push anything else
+        we're touching, if need be.  `calling_snake` is the snakebird which initiated
+        this push; if we encounter an instance of that snake blocking us, the push will
+        fail.  `seen_snakes` should be a set of seen snakes (empty initially, if we're
+        the first in the push chain); if we encounter a snake/pushable already in
+        `seen_snakes`, we'll skip processing it.
         """
-        ret_dirs = []
-        if self.exited:
-            return ret_dirs
-        for direction in DIRS:
-            (coords, cell_type) = self.level.get_cell_dir(self.cells[0], direction)
-            if coords in self.level.snake_coords:
-                if self.level.snake_coords[coords] != self:
-                    other_sb = self.level.snake_coords[coords]
-                    (ss, supported, danger_spikes, danger_void) = other_sb.get_adjacents(direction, self)
-                    if not supported and not danger_spikes and not danger_void and self not in ss:
-                        ret_dirs.append(direction)
-            else:
-                if cell_type != TYPE_WALL and cell_type != TYPE_SPIKE:
-                    ret_dirs.append(direction)
-        return ret_dirs
 
-    def push(self, direction, other_snakes):
-        """
-        We were pushed in the specified direction.  We're going to assume
-        that the push was valid so we're not doubling up on processing.
-        Pass in `other_snakes` to prevent a double-push from happening
-        """
-        #self.cells = [tuple(numpy.add(c, DIR_MODS[direction])) for c in self.cells]
+        # Find out what's next to us, in the specified direction, and return False if
+        # something's blocking us.
+        (snakes, wall, spikes, void, fruit) = self.get_adjacents(direction)
+        if wall or spikes or void or fruit:
+            return False
+        if calling_snake in snakes:
+            return False
+
+        # At this point we've "seen" ourselves, so make a note of it
+        seen_snakes.add(self)
+
+        # Loop through snakes and recursively push
+        for sb in snakes:
+            if sb not in seen_snakes:
+                if not sb.push(direction, calling_snake, seen_snakes):
+                    return False
+
+        # If we got here, we're okay to move.  Make a note of any teleporters we're
+        # pushed into.
         teleport_idx = None
         for (idx, c) in enumerate(self.cells.copy()):
             self.cells[idx] = tuple(numpy.add(c, DIR_MODS[direction]))
             if self.cells[idx] in self.level.teleporter:
                 teleport_idx = idx
 
-        # TODO: Potential race condition with teleports here - what happens if more than
-        # one snake gets pushed into a teleport on the same turn?  Well, actually I suppose
-        # I know the answer, sort of - neither should teleport because it'd be blocked.
-        # We should maybe make sure that's the case, though.  Will look into it if I find
-        # a level where it could happen.
-
-        # Check to see if we're pushed another snake
-        other_snakes.add(self)
-        for cell in self.cells:
-            if (cell in self.level.snake_coords and
-                    self.level.snake_coords[cell] != self and
-                    self.level.snake_coords[cell] not in other_snakes):
-                sb = self.level.snake_coords[cell]
-                other_snakes.add(sb)
-                sb.push(direction, other_snakes)
-
         # TODO: I wonder what would happen first - exit or teleport?
 
-        # Check to see if we were pushed into an exit.  We couldn't win
-        # in this circumstance because the other snake that just pushed us
-        # couldn't reach the exit yet.
-        if self.level.cells[self.cells[0][1]][self.cells[0][0]] == TYPE_EXIT and len(self.level.fruits) == 0:
-            self.exited = True
-            self.cells = []
+        # Check to see if we were pushed into an exit, or failing that a teleporter
+        if not self.check_exit():
+            if teleport_idx is not None:
+                self.process_teleport(teleport_idx)
 
-        # Finally, if we were pushed into a teleporter, take care of that.
-        if teleport_idx is not None:
-            self.process_teleport(teleport_idx)
+        # Finally, if we got here we moved, so return True
+        return True
 
-    def process_teleport(self, index):
+    def process_teleport(self, index, clean_up_level_cells=False):
         """
-        Processes a teleport of ourselves, with the teleporter at the given index
+        Processes a teleport of ourselves, with the teleporter at the given `index`.
+        If `clean_up_level_cells` is set to `True`, we will additionally update
+        `level.snake_coords` to reflect the new snake position (useful while
+        falling)
         """
 
         # Grab our current teleporter and find out if it's active.  Return right
@@ -308,71 +294,75 @@ class Snakebird(object):
                 return False
             new_cells.append(new_cell)
 
+        # Clean up level.snake_coords if told to
+        if clean_up_level_cells:
+            for coord in self.cells:
+                del self.level.snake_coords[coord]
+            for coord in new_cells:
+                self.level.snake_coords[coord] = self
+
         # If we got here, we're good to teleport
         self.cells = new_cells
         self.level.teleporter_occupied[cur_pivot] = None
         self.level.teleporter_occupied[new_pivot] = self
+
+        # Return true
         return True
 
     def move(self, direction):
         """
-        Attempts to move us in the specified direction
+        Attempts to move us in the specified direction.  Returns `True` if we
+        moved, and `False` if we didn't.  Will push other snakebirds/pushables
+        out of the way if we can.
         """
+
+        # Grab info about the adjacent cell
         (coords, cell_type) = self.level.get_cell_dir(self.cells[0], direction)
+
+        # First check for snakebirds/pushables, then fruits, and finally map cell type
+        do_move = False
         if coords in self.level.snake_coords:
-            if self.level.snake_coords[coords] != self:
-                # NOTE!  To avoid extra processing, we are blindly assuming
-                # that this is a valid, unblocked push that we're doing.
-                # Theoretically all our code previously (get_possible_moves, etc)
-                # has already verified all that, so we're going to blindly
-                # trust it.
-                self.level.snake_coords[coords].push(direction, set([self]))
+            if self.level.snake_coords[coords] == self:
+                return False
+            else:
+                if self.level.snake_coords[coords].push(direction, self, set()):
+                    do_move = True
+                else:
+                    return False
 
-                # After pushing the snake, process as usual.  There could have
-                # been an exit hiding behind the snake.  (The check for fruit
-                # is meaningless as we couldn't have been hiding that, but whatever.)
-
-        if coords in self.level.fruits:
+        elif coords in self.level.fruits:
             self.level.consume_fruit(coords)
             self.cells.insert(0, coords)
-            self.level.populate_snake_coords()
-            return self.level.check_fall()
+            return True
+
         elif cell_type == TYPE_EMPTY or cell_type == TYPE_EXIT or cell_type == TYPE_TELEPORTER:
-            self.cells.pop()
+            do_move = True
+
+        # If we got this far, do the actual move.
+        if do_move:
+            old_coords = self.cells.pop()
             self.cells.insert(0, coords)
-            if cell_type == TYPE_EXIT and len(self.level.fruits) == 0:
-                self.exited = True
-                self.cells = []
-                if self.level.check_win():
-                    return True
-                else:
-                    self.level.populate_snake_coords()
-                    return self.level.check_fall()
-            else:
+            if not self.check_exit():
                 if cell_type == TYPE_TELEPORTER:
                     self.process_teleport(0)
-                self.level.populate_snake_coords()
-                return self.level.check_fall()
+            return True
         else:
-            self.level.populate_snake_coords()
+            return False
 
-    def get_adjacents(self, direction, falling=False, calling_snake=None, recurse=True):
+    def get_adjacents(self, direction):
         """
         Get a set of items that we're adjacent to (which could
         theoretically be blocking us if we're falling, or prevent
-        us from being pushed, etc).  `falling` is a boolean
-        specifying whether we're falling (or pushing, alternatively).
-        This matters for interactions between snakebirds.
+        us from being pushed, etc).
 
         Returns a tuple of the following:
 
-        (snakesupports, supported, spikes, void)
+        (snakes, wall, spikes, void, fruit)
 
-        The first element, `snakesupports`, is a list of all
-        snakebirds that are possibly "supporting" ourself.  `supported`
-        is a boolean indicating whether we've got something solid
-        (wall, fruit).  `spikes` is a boolean indicating spikes,
-        `void` is a boolean indicating void..
+        The first element, `snakes`, is a list of all snakebirds (or
+        pushables, actually) that are possibly "supporting" ourself.
+        The other three are booleans indicating whether we're up
+        against one of `wall`, `spikes`, `void`, or `fruit`
 
         For snakes being pushed, you'd be blocked by supported OR
         spikes/void.  For snakes falling, spikes/void would mean death unless
@@ -417,122 +407,92 @@ class Snakebird(object):
         # actually affect the puzzle solution, but it's something that should
         # probably be taken care of.
 
-        # TODO:
-        # This is all quite inefficient
-
-        snakesupports = set()
-        supported = False
+        snakes = set()
+        wall = False
         spikes = False
         void = False
+        fruit = False
         for coords in self.cells:
             (other_coords, other_type) = self.level.get_cell_dir(coords, direction)
             if other_coords in self.level.snake_coords:
                 if self.level.snake_coords[other_coords] != self:
-                    snakesupports.add(self.level.snake_coords[other_coords])
-                    # If we're being pushed and a cell of our pushing snake is in
-                    # the way, consider ourself blocked
-                    if not falling and self.level.snake_coords[other_coords] == calling_snake:
-                        supported = True
+                    snakes.add(self.level.snake_coords[other_coords])
             elif other_coords in self.level.fruits:
-                supported = True
+                fruit = True
             elif other_type == TYPE_WALL:
-                supported = True
+                wall = True
             elif other_type == TYPE_SPIKE:
                 spikes = True
-                if self.supported_by_spikes:
-                    supported = True
             elif other_type == TYPE_VOID:
                 void = True
 
-        # Conditions on which we'll return right away:
-        #  1) If we've been called from another snake and aren't recursing
-        #  2) If we have no snake supports
-        #  3) We have a direct support
-        #  4) We're not falling and have a 'danger'
-        if ((calling_snake and not recurse) or
-                len(snakesupports) == 0 or
-                supported or
-                (not falling and (spikes or void))):
-            return (snakesupports, supported, spikes, void)
-
-        # If we got here, we need to get more info from our snake supports
-        seen_snakes = set()
-        seen_snakes.add(self)
-        continue_looping = True
-        new_ss = snakesupports.copy()
-        while continue_looping:
-            continue_looping = False
-            if not supported:
-                for sb in new_ss.copy():
-                    new_ss = set()
-                    if sb not in seen_snakes:
-                        seen_snakes.add(sb)
-                        snakesupports.add(sb)
-                        (other_ss, other_supported, other_spikes, other_void) = sb.get_adjacents(
-                            direction, falling=falling, calling_snake=self, recurse=False)
-                        if other_supported:
-                            supported = True
-                            break
-                        if not spikes and other_spikes:
-                            spikes = True
-                        if not void and other_void:
-                            void = True
-                        for ss in other_ss:
-                            if ss not in seen_snakes:
-                                new_ss.add(ss)
-                                continue_looping = True
-
-        # Return...
-        return (snakesupports, supported, spikes, void)
+        # Return!
+        return (snakes, wall, spikes, void, fruit)
 
     def fall(self):
         """
         Fall!  Could potentially be a no-op, of course.  Make sure to keep this
-        function in-line with Pushable.fall()
+        function in-line with Pushable.fall().  Returns `True` if we fell, and
+        `False` if not.
         """
 
         if self.exited:
-            return
-
-        supported = False
-        supported_by_spikes = False
-        supported_by_void = False
+            return (False, True)
 
         # Find out what's beneath us
-        (snakesupports,
-            supported,
-            supported_by_spikes,
-            supported_by_void) = self.get_adjacents(DIR_D, falling=True)
+        (snakes, wall, spikes, void, fruit) = self.get_adjacents(DIR_D)
 
-        # Check to see if we fall, or are dead, or whatever
-        if supported:
-            return False
-        elif supported_by_spikes or supported_by_void:
+        # If we have a wall, fruit, or another snake/object under us, we won't fall
+        if wall or fruit or len(snakes) > 0:
+            return (False, wall or fruit)
+
+        # If we have spikes or void under us, we'll die
+        if spikes or void:
             raise PlayerLose('Fell to your death!')
-        else:
-            for sb in [self] + list(snakesupports):
-                #sb.cells = [tuple(numpy.add(c, DIR_MODS[DIR_D])) for c in sb.cells]
-                teleport_idx = None
-                for (idx, c) in enumerate(sb.cells.copy()):
-                    sb.cells[idx] = tuple(numpy.add(c, DIR_MODS[DIR_D]))
-                    if sb.cells[idx] in self.level.teleporter:
-                        teleport_idx = idx
 
-                # TODO: I wonder what would happen first - exit or teleport?
+        # Otherwise, we fall!  Woo.  Check for teleport indexes as we go
+        teleport_idx = None
+        for coord in self.cells:
+            del self.level.snake_coords[coord]
+        for (idx, c) in enumerate(self.cells.copy()):
+            self.cells[idx] = tuple(numpy.add(c, DIR_MODS[DIR_D]))
+            self.level.snake_coords[self.cells[idx]] = self
+            if self.cells[idx] in self.level.teleporter:
+                teleport_idx = idx
 
-                # Check to see if we exited - this can happen in the middle
-                # of a fall (I think level 4 is the first where we can
-                # conclusively say this)
-                if self.level.cells[sb.cells[0][1]][sb.cells[0][0]] == TYPE_EXIT and len(self.level.fruits) == 0:
-                    sb.exited = True
-                    sb.cells = []
+        # TODO: I wonder what would happen first - exit or teleport?
 
-                # If we were pushed into a teleporter, take care of that.
-                if teleport_idx is not None:
-                    sb.process_teleport(teleport_idx)
+        # Check to see if we exited - this can happen in the middle
+        # of a fall (I think level 4 is the first where we can
+        # conclusively say this)
+        if not self.check_exit(clean_up_level_cells=True):
+            # If we were pushed into a teleporter, take care of that.
+            if teleport_idx is not None:
+                self.process_teleport(teleport_idx, clean_up_level_cells=True)
 
-            # We fell, so return true
+        # We fell, so return true
+        return (True, False)
+
+    def check_exit(self, clean_up_level_cells=False):
+        """
+        Check to see if our Snakebird has exited, and if so, handle it.  Returns
+        `True` if we did, and `False` otherwise.  Will call `level.check_win()`
+        if we did, to see if we've won or not.  If the optional argument
+        `clean_up_level_cells` is set to `True`, we will clear out this Snakebird's
+        entries in `level.snake_coords`.
+        """
+        if (self.can_exit and
+                self.level.cells[self.cells[0][1]][self.cells[0][0]] == TYPE_EXIT and
+                len(self.level.fruits) == 0):
+            if clean_up_level_cells:
+                for coord in self.cells:
+                    del self.level.snake_coords[coord]
+            self.exited = True
+            self.cells = []
+            self.level.check_win()
             return True
+        else:
+            return False
 
     def clone(self):
         newobj = Snakebird(self.color, self.level)
@@ -555,7 +515,7 @@ class Pushable(Snakebird):
     we'd otherwise have to just copy+paste into here.
     """
 
-    supported_by_spikes = True
+    can_exit = False
 
     def __init__(self, desc, level):
         self.desc = desc
@@ -610,40 +570,39 @@ class Pushable(Snakebird):
         """
 
         if len(self.cells) == 0:
-            return
-
-        supported = False
-        supported_by_spikes = False
-        supported_by_void = False
+            return (False, True)
 
         # Find out what's beneath us
-        (snakesupports,
-            supported,
-            supported_by_spikes,
-            supported_by_void) = self.get_adjacents(DIR_D, falling=True)
+        (snakes, wall, spikes, void, fruit) = self.get_adjacents(DIR_D)
 
-        # Check to see if we fall, or disappear, or whatever
-        if supported or supported_by_spikes:
-            return False
-        elif supported_by_void:
+        # If we have a wall, fruit, spikes, or another snake/object under us, we won't fall
+        if wall or fruit or spikes or len(snakes) > 0:
+            return (False, wall or fruit or spikes)
+
+        # If we have void under us, we'll technically fall, but also disappear,
+        # maybe causing a lose condition.
+        if void:
             self.cells = []
             if self.level.die_on_pushable_loss:
                 raise PlayerLose('Lost a pushable object!')
-            return False
-        else:
+            return (True, True)
 
-            for sb in [self] + list(snakesupports):
-                #sb.cells = [tuple(numpy.add(c, DIR_MODS[DIR_D])) for c in sb.cells]
-                teleport_idx = None
-                for (idx, c) in enumerate(sb.cells.copy()):
-                    sb.cells[idx] = tuple(numpy.add(c, DIR_MODS[DIR_D]))
-                    if sb.cells[idx] in self.level.teleporter:
-                        teleport_idx = idx
-                if teleport_idx is not None:
-                    sb.process_teleport(teleport_idx)
+        # Otherwise, we fall!  Woo.  Check for teleport indexes as we go
+        teleport_idx = None
+        for coord in self.cells:
+            del self.level.snake_coords[coord]
+        for (idx, c) in enumerate(self.cells.copy()):
+            self.cells[idx] = tuple(numpy.add(c, DIR_MODS[DIR_D]))
+            self.level.snake_coords[self.cells[idx]] = self
+            if self.cells[idx] in self.level.teleporter:
+                teleport_idx = idx
 
-            # We fell, so return true
-            return True
+        # If we were pushed into a teleporter, take care of that.
+        if teleport_idx is not None:
+            self.process_teleport(teleport_idx, clean_up_level_cells=True)
+
+        # We fell, so return true
+        return (True, False)
 
     def clone(self):
         newobj = Pushable(self.desc, self.level)
@@ -825,7 +784,7 @@ class Level(object):
                 self.set_map_char(self.max_seen_x-2, y, '~')
 
         # Construct our Snakebirds
-        for sb in self.snakebirds.values():
+        for sb in self.snakebirds_l:
             sb.finish(body_pointers)
 
         # Make sure we've used up all our body pointers
@@ -927,31 +886,19 @@ class Level(object):
         a win condition after each round of falling, in case we win
         mid-fall, and will return `True` if we won.  (`False` otherwise)
         """
-        # TODO: this is pretty inefficient - the individual calls to fall()
-        # can cause more than one object to fall, but this loop doesn't really
-        # know about that, so we can end up checking multiple times.  Of course,
-        # that might be necessary anyway, but still.
-        falling = set(self.interactives)
-        while len(falling) > 0:
-            for sb in falling.copy():
-                if sb.fall():
-                    self.populate_snake_coords()
-                else:
-                    falling.remove(sb)
-            if self.check_win():
+        something_fell = True
+        to_process = set(self.interactives)
+        while something_fell:
+            something_fell = False
+            for sb in to_process.copy():
+                (fell, supported) = sb.fall()
+                if fell:
+                    something_fell = True
+                elif supported:
+                    to_process.remove(sb)
+            if self.won:
                 return True
         return False
-
-    def get_possible_moves(self):
-        """
-        Returns a list of all possible moves on the board, for all
-        snakebirds.  Moves are a tuple of (sb, dir)
-        """
-        ret_list = []
-        for sb in self.snakebirds.values():
-            for direction in sb.get_possible_moves():
-                ret_list.append((sb, direction))
-        return ret_list
 
     def print_level(self):
         """
@@ -960,7 +907,7 @@ class Level(object):
 
         # First grab information about our snakes
         disp_snake_coords = {}
-        for sb in self.snakebirds.values():
+        for sb in self.snakebirds_l:
             sb.compute_display_chars()
             for (idx, coords) in enumerate(sb.cells):
                 disp_snake_coords[coords] = (sb, idx)
@@ -1025,7 +972,7 @@ class State(object):
 
         self.level = level
         self.fruits = {}
-        self.snakebirds = {}
+        self.snakebirds_l = []
         self.pushables = {}
         self.moves = moves
         self.teleporter_occupied = level.teleporter_occupied.copy()
@@ -1033,8 +980,8 @@ class State(object):
         for coord in level.fruits.keys():
             self.fruits[coord] = True
         # TODO: I feel these could be combined...
-        for (color, sb) in level.snakebirds.items():
-            self.snakebirds[color] = sb.clone()
+        for sb in level.snakebirds_l:
+            self.snakebirds_l.append(sb.clone())
         for (num, obj) in level.pushables.items():
             self.pushables[num] = obj.clone()
 
@@ -1044,8 +991,8 @@ class State(object):
         for coords in self.fruits.keys():
             self.level.fruits[coords] = True
 
-        for color in self.snakebirds.keys():
-            self.level.snakebirds[color].apply_clone(self.snakebirds[color])
+        for sb in self.snakebirds_l:
+            self.level.snakebirds[sb.color].apply_clone(sb)
 
         for num in self.pushables.keys():
             self.level.pushables[num].apply_clone(self.pushables[num])
@@ -1069,7 +1016,7 @@ class State(object):
         for fruit in self.fruits.keys():
             sumlist.append('f={}'.format(fruit))
         # TODO: Ditto re: combination
-        for sb in self.snakebirds.values():
+        for sb in self.snakebirds_l:
             sumlist.append('s-{}={}'.format(sb.color, sb.checksum()))
         for obj in self.pushables.values():
             sumlist.append('p-{}={}'.format(obj.desc, obj.checksum()))
@@ -1128,10 +1075,20 @@ class Game(object):
         state.apply()
 
     def move(self, sb, direction, state=None):
+        """
+        Move the snakebird in the given direction - if the
+        snake moves properly, advance our state.
+        """
         self.moves.append((sb, direction))
         self.push_state(state)
         self.cur_steps += 1
-        return sb.move(direction)
+        if (sb.move(direction)):
+            self.level.populate_snake_coords()
+            # Check to see if we won and exit if we have
+            if self.level.won:
+                return True
+            self.level.check_fall()
+            return self.level.won
 
     def undo(self):
         if len(self.states) > 0:
@@ -1191,22 +1148,12 @@ class Game(object):
                 SNAKE_T[self.cur_snakebird.color],
                 colorama.Style.RESET_ALL
             ))
-            if (len(self.level.get_possible_moves()) == 0):
-                print('{}No moves available!{}'.format(colorama.Fore.RED, colorama.Style.RESET_ALL))
-            else:
-                print('Possible moves:')
-                moves = self.cur_snakebird.get_possible_moves()
-                if len(moves) == 0:
-                    print("\t{}None!{}".format(colorama.Fore.RED, colorama.Style.RESET_ALL))
-                else:
-                    for direction in self.cur_snakebird.get_possible_moves():
-                        print("\t{}".format(DIR_T[direction]))
 
     def interactive(self):
         colorama.init(autoreset=True)
         while True:
             self.cur_snakebird = self.level.snakebirds_l[self.cur_snakebird_idx]
-            if not self.level.won and self.alive and len(self.level.get_possible_moves()) > 0:
+            if not self.level.won and self.alive:
                 while self.cur_snakebird.exited == True:
                     self.cur_snakebird_idx = ((self.cur_snakebird_idx + 1) % len(self.level.snakebirds))
                     self.cur_snakebird = self.level.snakebirds_l[self.cur_snakebird_idx]
@@ -1214,7 +1161,7 @@ class Game(object):
             full_control = True
             if self.level.won:
                 return True
-            elif self.alive == False or len(self.level.get_possible_moves()) == 0:
+            elif self.alive == False:
                 full_control = False
 
             if full_control:
@@ -1245,15 +1192,14 @@ class Game(object):
                     self.cur_snakebird_idx = ((self.cur_snakebird_idx + 1) % len(self.level.snakebirds))
             elif full_control and cmd in DIR_CMD:
                 direction = DIR_CMD[cmd]
-                if direction in self.cur_snakebird.get_possible_moves():
-                    try:
-                        self.move(self.cur_snakebird, DIR_CMD[cmd])
-                    except PlayerLose as e:
-                        self.alive = False
-                        report_str = 'Player Death: {}'.format(e)
-                        print('-'*len(report_str))
-                        print(report_str)
-                        print('-'*len(report_str))
+                try:
+                    self.move(self.cur_snakebird, DIR_CMD[cmd])
+                except PlayerLose as e:
+                    self.alive = False
+                    report_str = 'Player Death: {}'.format(e)
+                    print('-'*len(report_str))
+                    print(report_str)
+                    print('-'*len(report_str))
 
     def solve_recurs(self):
         """
@@ -1277,34 +1223,29 @@ class Game(object):
         thanks to the randomization mentioned above.)
         """
 
-        if len(self.level.snakebirds) > 1:
-            do_shuffle = True
-        else:
-            do_shuffle = False
-
         if self.level.return_first_solution and self.solution is not None:
             return
         (state, new_checksum) = self.get_state()
         if not new_checksum:
             return
-        moves = self.level.get_possible_moves()
-        if do_shuffle:
-            random.shuffle(moves)
-        for (sb, direction) in moves:
-            try:
-                if (self.move(sb, direction, state)):
-                    self.store_winning_moves(quiet=False, display_moves=False)
-                    if self.level.return_first_solution:
-                        return
-                    self.undo()
-                else:
-                    if self.step_limit():
+        for sb in self.level.snakebirds_l:
+            if not sb.exited:
+                for direction in DIRS:
+                    try:
+                        self.move(sb, direction, state)
+                        if self.level.won:
+                            self.store_winning_moves(quiet=False, display_moves=False)
+                            if self.level.return_first_solution:
+                                return
+                            self.undo()
+                        else:
+                            if self.step_limit():
+                                self.undo()
+                            else:
+                                self.solve_recurs()
+                                self.undo()
+                    except PlayerLose:
                         self.undo()
-                    else:
-                        self.solve_recurs()
-                        self.undo()
-            except PlayerLose:
-                self.undo()
 
     def solve_bfs(self):
         """
@@ -1338,19 +1279,21 @@ class Game(object):
             sys.stdout.flush()
             for state in queue:
                 self.moves = state.apply()
-                moves = self.level.get_possible_moves()
-                for (sb, direction) in moves:
-                    self.moves = state.apply()
-                    try:
-                        if (self.move(sb, direction, state)):
-                            print('')
-                            self.store_winning_moves(quiet=False, display_moves=False)
-                            return
-                        (new_state, is_new_state) = self.get_state(self.moves)
-                        if is_new_state:
-                            next_queue.append(new_state)
-                    except PlayerLose:
-                        pass
+                for sb in self.level.snakebirds_l:
+                    if not sb.exited:
+                        for direction in DIRS:
+                            self.moves = state.apply()
+                            try:
+                                self.move(sb, direction, state)
+                                if self.level.won:
+                                    print('')
+                                    self.store_winning_moves(quiet=False, display_moves=False)
+                                    return
+                                (new_state, is_new_state) = self.get_state(self.moves)
+                                if is_new_state:
+                                    next_queue.append(new_state)
+                            except PlayerLose:
+                                pass
             queue = next_queue
             if len(next_queue) == 0:
                 break
