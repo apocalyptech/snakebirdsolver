@@ -2,7 +2,6 @@
 # vim: set expandtab tabstop=4 shiftwidth=4:
 
 import sys
-import numpy
 import random
 import colorama
 
@@ -198,11 +197,13 @@ class Snakebird(object):
         """
         self.display_chars = [SNAKE_T[self.color][0]]
         for i in range(1,len(self)):
-            dir_to_head = DIR_MODS_REV[tuple(numpy.subtract(self.cells[i-1], self.cells[i]))]
+            dir_to_head = DIR_MODS_REV[(self.cells[i-1][0] - self.cells[i][0],
+                self.cells[i-1][1] - self.cells[i][1])]
             if i+1 == len(self):
                 dir_to_tail = DIR_REV[dir_to_head]
             else:
-                dir_to_tail = DIR_MODS_REV[tuple(numpy.subtract(self.cells[i+1], self.cells[i]))]
+                dir_to_tail = DIR_MODS_REV[(self.cells[i+1][0] - self.cells[i][0],
+                    self.cells[i+1][1] - self.cells[i][1])]
             self.display_chars.append(SNAKE_CHARS[dir_to_head | dir_to_tail])
 
     def get_print_char(self, idx):
@@ -243,7 +244,7 @@ class Snakebird(object):
         # pushed into.
         teleport_idx = None
         for (idx, c) in enumerate(self.cells.copy()):
-            self.cells[idx] = tuple(numpy.add(c, DIR_MODS[direction]))
+            self.cells[idx] = (c[0] + DIR_MODS[direction][0], c[1] + DIR_MODS[direction][1])
             if self.cells[idx] in self.level.teleporter:
                 teleport_idx = idx
 
@@ -428,7 +429,7 @@ class Snakebird(object):
         for coord in self.cells:
             del self.level.snake_coords[coord]
         for (idx, c) in enumerate(self.cells.copy()):
-            self.cells[idx] = tuple(numpy.add(c, DIR_MODS[DIR_D]))
+            self.cells[idx] = (c[0] + DIR_MODS[DIR_D][0], c[1] + DIR_MODS[DIR_D][1])
             self.level.snake_coords[self.cells[idx]] = self
             if self.cells[idx] in self.level.teleporter:
                 teleport_idx = idx
@@ -568,7 +569,7 @@ class Pushable(Snakebird):
         for coord in self.cells:
             del self.level.snake_coords[coord]
         for (idx, c) in enumerate(self.cells.copy()):
-            self.cells[idx] = tuple(numpy.add(c, DIR_MODS[DIR_D]))
+            self.cells[idx] = (c[0] + DIR_MODS[DIR_D][0], c[1] + DIR_MODS[DIR_D][1])
             self.level.snake_coords[self.cells[idx]] = self
             if self.cells[idx] in self.level.teleporter:
                 teleport_idx = idx
@@ -854,7 +855,8 @@ class Level(object):
         Returns the a tuple of ((x, y), type) of the cell in the given direction
         from the passed-in starting point
         """
-        (new_x, new_y) = tuple(numpy.add(coords, DIR_MODS[direction]))
+        new_x = coords[0] + DIR_MODS[direction][0]
+        new_y = coords[1] + DIR_MODS[direction][1]
         return((new_x, new_y), self.cells[new_y][new_x])
 
     def consume_fruit(self, coords):

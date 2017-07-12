@@ -9,24 +9,19 @@ http://store.steampowered.com/app/357300/Snakebird/
 
 ![Interactive Mode](sb_interactive.png) ![Auto-Solver](sb_solve.png)
 
-It's often quite slow.  Puzzles with more than one snakebird, long
-snakebirds, or multiple pushable objects will often go into the tens
-of minutes, or even hours to solve.  Some I've not let run to
-completion.  The game in general doesn't really lend itself to
-bruteforce solving; there's just too many moving parts, and the
-possible action tree is ridiculously wide and deep.  Even simple
-levels can end up taking a minute or two to solve, even when using
-PyPy3.
+Puzzles with more than one snakebird, long snakebirds, or multiple
+pushable objects can go into the tens of minutes, or even hours to
+solve.  Some I've not let run to completion due to the extreme solve
+times.  The game in general doesn't really lend itself to bruteforce
+solving; there's just too many moving parts, and the possible action
+tree is often ridiculously wide and deep.
 
 The game uses either of two algorithms to find solutions:
 breadth-first (the default) or depth-first.  Puzzles which are known
 to work better with Depth-First are configured to default to that
 one instead (currently we have just one of those).  The Breadth-First
-attempt was inspired by another Snakebird solver:
-https://github.com/david-westreicher/snakebird - That version is
-rather more efficient than mine in nearly all respects, though
-suffers from much the same exponential-choice performance problems as
-mine once the snakebird count goes up and the solutions get longer.
+attempt was inspired by another Snakebird solver on Github:
+https://github.com/david-westreicher/snakebird
 
 Note that Breadth-First Searching can get pretty memory intensive if
 the tree is wide and deep enough, since we've got to keep track of
@@ -35,14 +30,6 @@ overnight and came back to a badly-swapping system.  Depth-First
 should be much kinder to system memory, and could theoretically be
 run for quite a bit longer, but it is in general slower than BFS.
 
-There's plenty in the code that could be optimized - I'm sure we're
-doing unnecessary calculations all the time, or needlessly
-complicating things with class abstraction, etc.  The other solver
-mentioned above is much better in that regard.  On a higher level, I
-suspect that going back to spend some time on actual CS theory and
-algorithm construction could help, and there are probably several math
-concepts which could help find shortcuts.
-
 There are some tests in `tests.py` which just check the solver against
 known-good solutions for some of the more-quickly-solved puzzles.  Not
 actual unit tests, alas, but slightly better than nothing.
@@ -50,13 +37,12 @@ actual unit tests, alas, but slightly better than nothing.
 Usage
 =====
 
-Theoretically runnable with any Python 3 (and probably Python 2),
-though it more or less requires PyPy3/PyPy.  Processing is slow
-enough with PyPy3 that I can't imagine running it in CPython.
+This should be runnable with any Python 3 (and probably Python 2),
+and will benefit from being run against PyPy/PyPy3.  Processing times
+should be at least halved when running with PyPy.
 
 The `colorama` Python module is required for some output colorization
-when running interactively, and the `numpy` module is used to do
-some tuple arithmetic.
+when running interactively.
 
 To solve a level:
 
@@ -69,7 +55,7 @@ To solve a level with either DFS or BFS:
 
 To run interactively:
 
-    ./solve.py -l level1.txt -i
+    ./solve.py -l level01.txt -i
 
 To get help on the commandline args (though there's really only
 what I just mentioned):
@@ -171,11 +157,14 @@ The following characters are used:
 Performance
 ===========
 
-As I say, it's often bad, and gets exponentially worse when there's more
-than one Snakebird or pushable object in play.  So far I've not gotten 
-it to solve any of the three-snakebird levels, for instance, and level
-42 (with four pushables) got to nearly eight hours on a by-then badly
-swapping system before I cancelled it.
+There are a few levels whose possible trees are deep and wide enough
+that I haven't let the solver run to completion.  Solve times for most
+levels will end up being under a minute, though, so in general it's
+not too bad.  So far I've not gotten it to solve any of the three-snakebird
+levels, though the last time I tried was on an earlier version whose
+performance wasn't nearly as good as it is now.  On that version, a
+solve attempt on Level 42 (with four pushables) got to nearly eight hours on a
+by-then badly swapping system before I cancelled it.
 
 A few levels benefit from specifying a maximum move count when using
 the depth-first search algorithm, even though Snakebird itself doesn't
@@ -198,44 +187,18 @@ help trim the solving tree down a bit, since in general solutions
 require all the objects to be in place.  This can be overridden on a
 per-level basis with the "AllowPushableLoss" directive.
 
-Comparison
-==========
-
-As mentioned far above, there's another bruteforce Snakebird solver on
-github, at: https://github.com/david-westreicher/snakebird
-
-Things David Westreicher's solver does better:
-
- * Is noticeably faster
- * Outputs its found moves in a nice condensed format ("3x Right").  Its
-   move-testing order, relatedly, makes it more likely that you'll stick
-   with moving a specific snakebird as long as possible, rather than
-   going back and forth, which can happen with mine.
- * Apparently supports reading Snakebird level data from screenshots,
-   though I hadn't tested that out myself.
- * Also apparently can send keystrokes directly to a running Snakebird
-   process, to solve a level in-game.  I hadn't tested that out,
-   either.  (Relatedly, its solution output matches what you'd have to
-   give to Snakebird, including "change snakebird" keys.)
-
-Things my solver does better:
-
- * Supports pushable objects
- * Supports teleporters
- * A bit more flexible with regards to initial snakebird placement - I
-   think the other one is pretty picky about how snakebirds are placed
-   in the level definition files
- * We've got a complete set of Snakebird level files to play with; the
-   other one only includes the first five
-
-Bugs
-====
-
-* The code is, in general, quite inefficient, and could be optimized
-  in a number of ways.
-
 Current Solve Times
 ===================
+
+**NOTE:** This section is, at the moment, basically obsolete.  I'd been
+using PyPy to run this solver, and thought I'd be clever by offloading
+some math to Python's `numpy` library, but it turns out that the two
+really don't play well together performancewise, at least on the versions
+that I'd been using.  So I'd been thinking for quite awhile that my
+version was far less efficient than another solver mentioned above.
+Turns out that if I rip numpy out of the code and just do the math
+myself, the performance goes up by at least an order of magnitude.
+So: updated numbers here are forthcoming.
 
 Obviously this depends greatly on CPU, though the comparative times
 should still apply regardless.  I'm using a pretty ancient AMD
