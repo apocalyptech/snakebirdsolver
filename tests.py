@@ -17,7 +17,7 @@ class LevelTests(unittest.TestCase):
     """
 
     def test_level00_bfs(self):
-        game = Game('level00.txt')
+        game = Game('levels/level00.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_RED], DIR_R),
@@ -52,7 +52,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level01_bfs(self):
-        game = Game('level01.txt')
+        game = Game('levels/level01.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_GREEN], DIR_U),
@@ -75,7 +75,7 @@ class LevelTests(unittest.TestCase):
 
 
     def test_level02_bfs(self):
-        game = Game('level02.txt')
+        game = Game('levels/level02.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_RED], DIR_L),
@@ -107,7 +107,7 @@ class LevelTests(unittest.TestCase):
 
 
     def test_level03_bfs(self):
-        game = Game('level03.txt')
+        game = Game('levels/level03.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_BLUE], DIR_R),
@@ -141,7 +141,7 @@ class LevelTests(unittest.TestCase):
 
 
     def test_level04_bfs(self):
-        game = Game('level04.txt')
+        game = Game('levels/level04.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_GREEN], DIR_U),
@@ -178,7 +178,7 @@ class LevelTests(unittest.TestCase):
 
 
     def test_level05_bfs(self):
-        game = Game('level05.txt')
+        game = Game('levels/level05.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_RED], DIR_U),
@@ -209,7 +209,7 @@ class LevelTests(unittest.TestCase):
 
 
     def test_level06_bfs(self):
-        game = Game('level06.txt')
+        game = Game('levels/level06.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_BLUE], DIR_R),
@@ -252,7 +252,7 @@ class LevelTests(unittest.TestCase):
 
 
     def test_level10_bfs(self):
-        game = Game('level10.txt')
+        game = Game('levels/level10.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_RED], DIR_U),
@@ -291,7 +291,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level11_dfs(self):
-        game = Game('level11.txt')
+        game = Game('levels/level11.txt')
         game.solve_recurs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_GREEN], DIR_R),
@@ -332,7 +332,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level12_bfs(self):
-        game = Game('level12.txt')
+        game = Game('levels/level12.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_BLUE], DIR_L),
@@ -390,7 +390,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level14_bfs(self):
-        game = Game('level14.txt')
+        game = Game('levels/level14.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_BLUE], DIR_R),
@@ -420,7 +420,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level20_bfs(self):
-        game = Game('level20.txt')
+        game = Game('levels/level20.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_BLUE], DIR_R),
@@ -476,7 +476,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level21_bfs(self):
-        game = Game('level21.txt')
+        game = Game('levels/level21.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_BLUE], DIR_U),
@@ -521,7 +521,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level22_bfs(self):
-        game = Game('level22.txt')
+        game = Game('levels/level22.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_RED], DIR_R),
@@ -572,7 +572,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level30_bfs(self):
-        game = Game('level30.txt')
+        game = Game('levels/level30.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_BLUE], DIR_L),
@@ -593,7 +593,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level31_bfs(self):
-        game = Game('level31.txt')
+        game = Game('levels/level31.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_GREEN], DIR_L),
@@ -607,7 +607,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level32_bfs(self):
-        game = Game('level32.txt')
+        game = Game('levels/level32.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_RED], DIR_U),
@@ -634,7 +634,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level33_bfs(self):
-        game = Game('level33.txt')
+        game = Game('levels/level33.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_GREEN], DIR_L),
@@ -682,7 +682,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level34_bfs(self):
-        game = Game('level34.txt')
+        game = Game('levels/level34.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_BLUE], DIR_U),
@@ -705,7 +705,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level35_bfs(self):
-        game = Game('level35.txt')
+        game = Game('levels/level35.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_BLUE], DIR_U),
@@ -740,7 +740,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level37_bfs(self):
-        game = Game('level37.txt')
+        game = Game('levels/level37.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_GREEN], DIR_U),
@@ -762,7 +762,7 @@ class LevelTests(unittest.TestCase):
         ])
 
     def test_level42_bfs(self):
-        game = Game('level42.txt')
+        game = Game('levels/level42.txt')
         game.solve_bfs(quiet=True)
         self.assertEqual(game.solution, [
             (game.level.snakebirds[SNAKE_RED], DIR_U),

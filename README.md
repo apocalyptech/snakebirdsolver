@@ -46,16 +46,16 @@ when running interactively.
 
 To solve a level:
 
-    ./solve.py -l level1.txt
+    ./solve.py -l levels/level01.txt
 
 To solve a level with either DFS or BFS:
 
-    ./solve.py -l level1.txt -a DFS
-    ./solve.py -l level1.txt -a BFS
+    ./solve.py -l levels/level01.txt -a DFS
+    ./solve.py -l levels/level01.txt -a BFS
 
 To run interactively:
 
-    ./solve.py -l level01.txt -i
+    ./solve.py -l levels/level01.txt -i
 
 To get help on the commandline args (though there's really only
 what I just mentioned):

@@ -92,10 +92,11 @@ if __name__ == '__main__':
             else:
                 print('No solutions found in {} turns!'.format(game.max_steps))
         else:
-            if args.level[-4:] == '.txt':
-                level_name = args.level[:-4]
+            (prefix, filename) = os.path.split(args.level)
+            if filename[-4:] == '.txt':
+                level_name = filename[:-4]
             else:
-                level_name = args.level
+                level_name = filename
             print('')
             print('    def test_{}_{}(self):'.format(level_name, game.level.preferred_algorithm.lower()))
             print('        game = Game(\'%s\')' % (args.level))
