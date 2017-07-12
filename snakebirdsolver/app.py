@@ -212,10 +212,10 @@ class Snakebird(object):
         """
         return '{}{}'.format(color_snake[self.color], self.display_chars[idx])
 
-    def push(self, direction, calling_snake, seen_snakes):
+    def push(self, direction, pushing_snake, seen_snakes):
         """
         We were pushed in the specified direction.  Will recursively push anything else
-        we're touching, if need be.  `calling_snake` is the snakebird which initiated
+        we're touching, if need be.  `pushing_snake` is the snakebird which initiated
         this push; if we encounter an instance of that snake blocking us, the push will
         fail.  `seen_snakes` should be a set of seen snakes (empty initially, if we're
         the first in the push chain); if we encounter a snake/pushable already in
@@ -224,10 +224,10 @@ class Snakebird(object):
 
         # Find out what's next to us, in the specified direction, and return False if
         # something's blocking us.
-        (snakes, wall, spikes, void, fruit) = self.get_adjacents(direction)
+        (snakes, wall, spikes, void, fruit) = self.get_adjacents(direction, pushing_snake=pushing_snake)
         if wall or spikes or void or fruit:
             return False
-        if calling_snake in snakes:
+        if pushing_snake in snakes:
             return False
 
         # At this point we've "seen" ourselves, so make a note of it
@@ -236,7 +236,7 @@ class Snakebird(object):
         # Loop through snakes and recursively push
         for sb in snakes:
             if sb not in seen_snakes:
-                if not sb.push(direction, calling_snake, seen_snakes):
+                if not sb.push(direction, pushing_snake, seen_snakes):
                     return False
 
         # If we got here, we're okay to move.  Make a note of any teleporters we're
@@ -349,11 +349,14 @@ class Snakebird(object):
         else:
             return False
 
-    def get_adjacents(self, direction):
+    def get_adjacents(self, direction, pushing_snake=None):
         """
         Get a set of items that we're adjacent to (which could
         theoretically be blocking us if we're falling, or prevent
-        us from being pushed, etc).
+        us from being pushed, etc).  Pass in `pushing_snake` if we're
+        being pushed - this is important because if we see a cell
+        belonging to `pushing_snake`, it will only actually block if
+        it's not the last cell of the snake.
 
         Returns a tuple of the following:
 
@@ -372,41 +375,6 @@ class Snakebird(object):
         # another snake into it; I think the first place you can see
         # that easily is level 26
 
-        # TODO:
-        # Our "snakesupports" stuff fails when more complex pushable objects
-        # are in play.  For instance, this situation in level 25:
-		#    
-		#    ~        ▰     ~ 
-		#    ~      ███     ~ 
-		#    ~      ▰B══▰   ~ 
-		#    ~       ╔G     ~ 
-		#    ~      ═╝▰     ~ 
-        #    ~     █   █    ~ 
-        #
-        # Blue can't push left because the object sees that blue is to the
-        # left of the object's rightmost cell, even though it's allowed in-game.
-        #
-        # Eh, I'm thinking a proper solution to this may be difficult.  If
-        # blue was one more segment long and had a tail pointing down, the
-        # game would NOT allow the move, meaning that this is an entirely
-        # different case than we've looked at thus far.
-
-        # TODO:
-        # Another case where pushable objects seem different than dealing with
-        # other snakes, unless I've just gotten this wrong the whole time
-        # somehow.  Level 39:
-        #
-        #    ~           ████     ~ 
-        #    ~     ╔═    █████    ~ 
-        #    ~     ║▰▰    ████    ~ 
-        #    ~     ╚G▲▲  █████    ~ 
-        #    ~    ████  ██████    ~ 
-        #
-        # In our solver, Green can only go right, but in Snakebird itself,
-        # green can go up and it works like you'd hope.  This turns out to not
-        # actually affect the puzzle solution, but it's something that should
-        # probably be taken care of.
-
         snakes = set()
         wall = False
         spikes = False
@@ -416,7 +384,12 @@ class Snakebird(object):
             (other_coords, other_type) = self.level.get_cell_dir(coords, direction)
             if other_coords in self.level.snake_coords:
                 if self.level.snake_coords[other_coords] != self:
-                    snakes.add(self.level.snake_coords[other_coords])
+                    if (pushing_snake is not None and
+                            self.level.snake_coords[other_coords] == pushing_snake):
+                        if pushing_snake.cells[-1] != other_coords:
+                            snakes.add(pushing_snake)
+                    else:
+                        snakes.add(self.level.snake_coords[other_coords])
             elif other_coords in self.level.fruits:
                 fruit = True
             elif other_type == TYPE_WALL:
@@ -469,6 +442,9 @@ class Snakebird(object):
             # If we were pushed into a teleporter, take care of that.
             if teleport_idx is not None:
                 self.process_teleport(teleport_idx, clean_up_level_cells=True)
+
+        # Alas, calling out to update our teleporter_occupied struct
+        self.level.populate_teleporter_coords()
 
         # We fell, so return true
         return (True, False)
@@ -857,6 +833,14 @@ class Level(object):
             for coords in sb.cells:
                 self.snake_coords[coords] = sb
 
+        # Also do teleporters, but in a separate function
+        self.populate_teleporter_coords()
+
+
+    def populate_teleporter_coords(self):
+        """
+        Make sure our `teleporter_occupied` info is correct
+        """
         # Also mark our teleporter as available if nothing's touching
         # it.
         for tp_coord in self.teleporter.keys():
@@ -1201,7 +1185,7 @@ class Game(object):
                     print(report_str)
                     print('-'*len(report_str))
 
-    def solve_recurs(self):
+    def solve_recurs(self, quiet=False):
         """
         Recursive depth-first solver algorithm.  In most cases, especially
         levels with a single snakebird, the breadth-first search (below)
@@ -1234,7 +1218,7 @@ class Game(object):
                     try:
                         self.move(sb, direction, state)
                         if self.level.won:
-                            self.store_winning_moves(quiet=False, display_moves=False)
+                            self.store_winning_moves(quiet=quiet, display_moves=False)
                             if self.level.return_first_solution:
                                 return
                             self.undo()
@@ -1242,12 +1226,12 @@ class Game(object):
                             if self.step_limit():
                                 self.undo()
                             else:
-                                self.solve_recurs()
+                                self.solve_recurs(quiet=quiet)
                                 self.undo()
                     except PlayerLose:
                         self.undo()
 
-    def solve_bfs(self):
+    def solve_bfs(self, quiet=False):
         """
         Our attempt at a breadth-first solver, inspired on
         https://github.com/david-westreicher/snakebird
@@ -1275,7 +1259,8 @@ class Game(object):
         queue = [self.get_state(self.moves)[0]]
         for i in range(self.max_steps):
             next_queue = []
-            sys.stdout.write("\rAt depth: {}...".format(i))
+            if not quiet:
+                sys.stdout.write("\rAt depth: {}...".format(i))
             sys.stdout.flush()
             for state in queue:
                 self.moves = state.apply()
@@ -1286,8 +1271,9 @@ class Game(object):
                             try:
                                 self.move(sb, direction, state)
                                 if self.level.won:
-                                    print('')
-                                    self.store_winning_moves(quiet=False, display_moves=False)
+                                    if not quiet:
+                                        print('')
+                                    self.store_winning_moves(quiet=quiet, display_moves=False)
                                     return
                                 (new_state, is_new_state) = self.get_state(self.moves)
                                 if is_new_state:
@@ -1297,7 +1283,8 @@ class Game(object):
             queue = next_queue
             if len(next_queue) == 0:
                 break
-        print('')
+        if not quiet:
+            print('')
 
     def print_debug_info(self, e=None):
         """

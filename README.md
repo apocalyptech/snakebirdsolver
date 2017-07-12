@@ -43,7 +43,9 @@ suspect that going back to spend some time on actual CS theory and
 algorithm construction could help, and there are probably several math
 concepts which could help find shortcuts.
 
-There are, alas, no unit tests.
+There are some tests in `tests.py` which just check the solver against
+known-good solutions for some of the more-quickly-solved puzzles.  Not
+actual unit tests, alas, but slightly better than nothing.
 
 Usage
 =====
@@ -186,8 +188,9 @@ algorithm.  Go figure.  So, for some of these I've set a max move
 count, knowing what the solutions already are, just to save on
 processing time.  There's a default max move limit of 100, if one
 isn't specified in the level file - a few levels come close to that
-limit, though in general those levels are a bit too slow to solve
-with this anyway.
+limit (and the solution to Star 4 is something like 140 steps long),
+though in general those levels are a bit too slow to solve with this
+anyway.
 
 By default, the game will consider the loss of any pushable object to
 be a game loss, even though the real game allows it.  This is done to
@@ -204,7 +207,10 @@ github, at: https://github.com/david-westreicher/snakebird
 Things David Westreicher's solver does better:
 
  * Is noticeably faster
- * Outputs its found moves in a nice condensed format ("3x Right")
+ * Outputs its found moves in a nice condensed format ("3x Right").  Its
+   move-testing order, relatedly, makes it more likely that you'll stick
+   with moving a specific snakebird as long as possible, rather than
+   going back and forth, which can happen with mine.
  * Apparently supports reading Snakebird level data from screenshots,
    though I hadn't tested that out myself.
  * Also apparently can send keystrokes directly to a running Snakebird
@@ -224,45 +230,6 @@ Things my solver does better:
 
 Bugs
 ====
-
-* There's a bug perhaps best seen in Level 25 related to pushable
-  objects (and I think prevents us from solving Star 4, though that
-  one's probably way too complex to be feasibly solveable with this
-  utility anyway).  Basically, if a snakebird is "inside" a pushable
-  object such that the body is entirely in a straight line, filling up
-  the space inbetween two pushable areas, the Snakebird game itself
-  allows the snakebird to push on the object to move it.  This code
-  doesn't allow that, because it sees the snake as essentially pushing
-  against itself.  For the moment, I'm not fixing it, since I don't
-  see a clear path to a solution without either overhauling how we do
-  pushing entirely or adding in special-case processing, which'd slow
-  everything else down.  Here's the easy example case from Level 25
-  where you can see it:
-
-```
-    ~        ▰     ~ 
-    ~      ███     ~ 
-    ~      ▰B══▰   ~ 
-    ~       ╔G     ~ 
-    ~      ═╝▰     ~ 
-    ~     █   █    ~ 
-```
-
-* There's a related bug which is pretty easy to see in Level 39:
-
-```
-    ~           ████     ~ 
-    ~     ╔═    █████    ~ 
-    ~     ║▰▰    ████    ~ 
-    ~     ╚G▲▲  █████    ~ 
-    ~    ████  ██████    ~ 
-```
-
-  ... In the game itself, the snakebird can push up to move the
-  topmost object up.  This solver doesn't allow it, though,
-  because it looks like we're pushing against ourself.  This
-  doesn't actually impact the solution of the puzzle, though,
-  so similarly I've not looked into fixing it.
 
 * The code is, in general, quite inefficient, and could be optimized
   in a number of ways.
@@ -313,7 +280,7 @@ Single Snakebird Levels
 | **Level 12**  | 52    | **0:13**  | 3:34 (L)      |       |
 | **Level 21**  | 39    | **0:19**  | 3:18 (L+)     |       |
 | **Level 22**  | 45    | **0:05**  | 1:01 (L)      | One Pushable |
-| **Level 23**  |       | *(cancelled at 80min)* |               | Two Pushables |
+| **Level 23**  |       | *(cancelled at 80min)* |  | Two Pushables |
 | **Level 24**  | 26    | 14:24     |               | One Pushable |
 | **Level 30**  | 15    | 0:02      |               | Teleporter |
 | **Level 31**  | 8     | 0:02      |               | Teleporter |
@@ -336,24 +303,24 @@ Two-Snakebird Levels
 | **Level 17**  | 69    | **3:35**  | *(cancelled at 20min)* | |
 | **Level 18**  | 35    | **2:08**  | *(cancelled at 10min)* | |
 | **Level 20**  | 50    | **0:47**  | 4:46 (L+)     |       |
-| **Level 25**  |       | *(cancelled at 90min)* |               | One Pushable, need to fix a bug in `get_adjacents` |
+| **Level 25**  |       | *(cancelled at 90min)* |  | One Pushable |
 | **Level 26**  | 35    | 3:02      |               | One Pushable |
 | **Level 27**  | 49    | 10:55     |               | One Pushable |
 | **Level 28**  | 49    | 52:40     |               | Two Pushables |
-| **Level 29**  |       | *(cancelled at 7.5hrs)* |               | Four Pushables |
+| **Level 29**  |       | *(cancelled at 7.5hrs)* | | Four Pushables |
 | **Level 32**  | 21    | 0:13      |               | One Pushable, Teleporter |
 | **Level 34**  | 17    | 0:22      |               | One Pushable, Teleporter |
 | **Level 36**  | 29    | 10:03     |               | Teleporter |
 | **Level 37**  | 16    | 0:20      |               | Teleporter |
 | **Level 38**  | 28    | 16:29     |               | Teleporter |
-| **Level 40**  |       | *(cancelled at 2.75hrs)* |               | Two Pushables |
+| **Level 40**  |       | *(cancelled at 2.75hrs)* | | Two Pushables |
 | **Level 41**  | 34    | **6:29**  | 58:55 (L+)    |       |
 | **Level 42**  | 42    | **0:56**  | 6:02 (L+)     |       |
 | **Level 43**  | 36    | 2:25      |               | One Pushable, requires `AllowPushableLoss` |
 | **Level 44**  | 36    | 1:14      |               | Teleporter |
-| **Level 45**  |       | *(cancelled at 2hrs)* |               | Two Pushables |
-| **Star 4**    |       | *(cancelled at 90min)* |               | Three Pushables, solution would require a fix for our first listed bug, I think |
-| **Star 5**    |       | *(cancelled at 90min)* |               | One Pushable, Teleporter |
+| **Level 45**  |       | *(cancelled at 2hrs)* |   | Two Pushables |
+| **Star 4**    |       | *(cancelled at 90min)* |  | Three Pushables |
+| **Star 5**    |       | *(cancelled at 90min)* |  | One Pushable, Teleporter |
 
 Three-Snakebird Levels
 ----------------------

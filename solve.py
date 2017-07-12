@@ -5,7 +5,7 @@ import os
 import sys
 import signal
 import argparse
-from snakebirdsolver.app import Level, Game, DIR_U, DIR_D, DIR_L, DIR_R, DIR_T, SNAKE_T
+from snakebirdsolver.app import Level, Game, DIR_U, DIR_D, DIR_L, DIR_R, DIR_T, SNAKE_T, SNAKE_RED, SNAKE_BLUE, SNAKE_GREEN
 
 game = None
 
@@ -68,29 +68,48 @@ if __name__ == '__main__':
 
     if args.interactive:
         game.interactive()
-#    elif args.test:
-#        dir_str = {
-#            DIR_U: 'DIR_U',
-#            DIR_D: 'DIR_D',
-#            DIR_R: 'DIR_R',
-#            DIR_L: 'DIR_L',
-#        }
-#        game.solve()
-#        if game.solution is None:
-#            if game.max_steps is None:
-#                print('No solutions found!')
-#            else:
-#                print('No solutions found in %d turns!' % (game.max_steps))
-#        else:
-#            print('')
-#            print('    def test_%s(self):' % (args.level))
-#            print('        game = Game(\'%s\')' % (args.level))
-#            print('        game.solve()')
-#            print('        self.assertEqual(game.solution, [')
-#            for direction in game.solution:
-#                print('            %s,' % (dir_str[direction]))
-#            print('        ])')
-#            print('')
+    elif args.test:
+        dir_str = {
+            DIR_U: 'DIR_U',
+            DIR_D: 'DIR_D',
+            DIR_R: 'DIR_R',
+            DIR_L: 'DIR_L',
+        }
+        snake_str = {
+            SNAKE_RED: 'SNAKE_RED',
+            SNAKE_GREEN: 'SNAKE_GREEN',
+            SNAKE_BLUE: 'SNAKE_BLUE',
+        }
+        if game.level.preferred_algorithm == 'DFS':
+            game.solve_recurs()
+        elif game.level.preferred_algorithm == 'BFS':
+            game.solve_bfs()
+        else:
+            raise Exception('Unknown preferred algorithm: {}'.format(game.level.preferred_algorithm))
+        if game.solution is None:
+            if game.max_steps is None:
+                print('No solutions found!')
+            else:
+                print('No solutions found in {} turns!'.format(game.max_steps))
+        else:
+            if args.level[-4:] == '.txt':
+                level_name = args.level[:-4]
+            else:
+                level_name = args.level
+            print('')
+            print('    def test_{}_{}(self):'.format(level_name, game.level.preferred_algorithm.lower()))
+            print('        game = Game(\'%s\')' % (args.level))
+            if game.level.preferred_algorithm == 'DFS':
+                print('        game.solve_recurs(quiet=True)')
+            elif game.level.preferred_algorithm == 'BFS':
+                print('        game.solve_bfs(quiet=True)')
+            else:
+                raise Exception('Unknown preferred algorithm: {}'.format(game.level.preferred_algorithm))
+            print('        self.assertEqual(game.solution, [')
+            for (sb, direction) in game.solution:
+                print('            (game.level.snakebirds[{}], {}),'.format(snake_str[sb.color], dir_str[direction]))
+            print('        ])')
+            print('')
     else:
 
         if game.level.preferred_algorithm == 'DFS':
