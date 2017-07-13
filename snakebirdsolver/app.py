@@ -212,6 +212,16 @@ class Snakebird(object):
         """
         return '{}{}'.format(color_snake[self.color], self.display_chars[idx])
 
+    def move_blindly(self, direction):
+        """
+        Blindly move us in the specified direction.  Does absolutely no checking on bounds,
+        if anything else is in the way, or updating of our level data structures.  Meant
+        mostly to be used during push() if we need to undo a recursive string of pushes.
+        """
+        for idx in range(len(self.cells)):
+            self.cells[idx] = (self.cells[idx][0] + DIR_MODS[direction][0],
+                self.cells[idx][1] + DIR_MODS[direction][1])
+
     def push(self, direction, pushing_snake, seen_snakes):
         """
         We were pushed in the specified direction.  Will recursively push anything else
@@ -226,36 +236,35 @@ class Snakebird(object):
         # something's blocking us.
         (snakes, wall, spikes, void, fruit) = self.get_adjacents(direction, pushing_snake=pushing_snake)
         if wall or spikes or void or fruit:
-            return False
+            return (False, None)
         if pushing_snake in snakes:
-            return False
+            return (False, None)
 
         # At this point we've "seen" ourselves, so make a note of it
         seen_snakes.add(self)
 
         # Loop through snakes and recursively push
+        pushed = set()
+        undo_pushes = False
         for sb in snakes:
             if sb not in seen_snakes:
-                if not sb.push(direction, pushing_snake, seen_snakes):
-                    return False
+                (was_pushed, ignore) = sb.push(direction, pushing_snake, seen_snakes)
+                if was_pushed:
+                    pushed.add(sb)
+                else:
+                    # Need to undo any snakes we may have pushed, thus far
+                    undo_pushes = True
+                    break
+        if undo_pushes:
+            for sb in pushed:
+                sb.move_blindly(DIR_REV[direction])
+            return (False, None)
 
-        # If we got here, we're okay to move.  Make a note of any teleporters we're
-        # pushed into.
-        teleport_idx = None
-        for (idx, c) in enumerate(self.cells.copy()):
-            self.cells[idx] = (c[0] + DIR_MODS[direction][0], c[1] + DIR_MODS[direction][1])
-            if self.cells[idx] in self.level.teleporter:
-                teleport_idx = idx
-
-        # TODO: I wonder what would happen first - exit or teleport?
-
-        # Check to see if we were pushed into an exit, or failing that a teleporter
-        if not self.check_exit():
-            if teleport_idx is not None:
-                self.process_teleport(teleport_idx)
+        # If we got here, we're okay to move.
+        self.move_blindly(direction)
 
         # Finally, if we got here we moved, so return True
-        return True
+        return (True, seen_snakes)
 
     def process_teleport(self, index, clean_up_level_cells=False):
         """
@@ -325,8 +334,24 @@ class Snakebird(object):
             if self.level.snake_coords[coords] == self:
                 return False
             else:
-                if self.level.snake_coords[coords].push(direction, self, set()):
+                (pushed, snakes) = self.level.snake_coords[coords].push(direction, self, set())
+                if pushed:
                     do_move = True
+
+                    # Look for teleporter entry and exit conditions for all snakes that were
+                    # pushed.  We have to wait until now to do this because there's circumstances
+                    # where we may have had to undo a push
+                    # TODO: I wonder what should happen first - exit or teleport?  Doesn't actually
+                    # come into play in the actual levels, though, so difficult to know for sure.
+                    for sb in snakes:
+                        if not sb.check_exit():
+                            teleport_idx = None
+                            for (idx, coord) in enumerate(sb.cells):
+                                if coord in self.level.teleporter:
+                                    teleport_idx = idx
+                                    break
+                            if teleport_idx is not None:
+                                sb.process_teleport(teleport_idx)
                 else:
                     return False
 
