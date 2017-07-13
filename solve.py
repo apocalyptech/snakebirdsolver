@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     group.add_argument('-t', '--test',
         action='store_true',
-        help='Generate python code suitable for a unit test')
+        help='Generate python code suitable to put in our unit test for level solutions (see tests.py)')
 
     parser.add_argument('-l', '--level',
         required=True,
@@ -52,7 +52,7 @@ if __name__ == '__main__':
         help='Level file to run')
 
     parser.add_argument('-a', '--algorithm',
-        choices=('BFS', 'DFS'),
+        choices=('BFS', 'DFS', 'bfs', 'dfs'),
         help='Algorithm to use: Breadth-First Search or Depth-First Search')
 
     args = parser.parse_args()
@@ -92,28 +92,13 @@ if __name__ == '__main__':
             else:
                 print('No solutions found in {} turns!'.format(game.max_steps))
         else:
-            (prefix, filename) = os.path.split(args.level)
-            if filename[-4:] == '.txt':
-                level_name = filename[:-4]
-            else:
-                level_name = filename
-            print('')
-            print('    def test_{}_{}(self):'.format(level_name, game.level.preferred_algorithm.lower()))
-            print('        game = Game(\'%s\')' % (args.level))
-            if game.level.preferred_algorithm == 'DFS':
-                print('        game.solve_recurs(quiet=True)')
-            elif game.level.preferred_algorithm == 'BFS':
-                print('        game.solve_bfs(quiet=True)')
-            else:
-                raise Exception('Unknown preferred algorithm: {}'.format(game.level.preferred_algorithm))
-            print('        self.assertEqual(game.solution, [')
+            print('        \'{}\': ['.format(args.level))
             for (sb, direction) in game.solution:
-                print('            (game.level.snakebirds[{}], {}),'.format(snake_str[sb.color], dir_str[direction]))
-            print('        ])')
-            print('')
+                print('            ({}, {}),'.format(snake_str[sb.color], dir_str[direction]))
+            print('        ],')
     else:
 
-        if game.level.preferred_algorithm == 'DFS':
+        if game.level.preferred_algorithm.upper() == 'DFS':
             print('Using depth-first search algorithm')
             print('Solving {} - Maximum Steps: {}'.format(game.level.desc, game.level.max_defined_steps))
             if game.level.return_first_solution:
@@ -129,7 +114,7 @@ if __name__ == '__main__':
                 game.print_debug_info(e)
                 raise e
 
-        elif game.level.preferred_algorithm == 'BFS':
+        elif game.level.preferred_algorithm.upper() == 'BFS':
             print('Using breadth-first search algorithm')
             print('Solving {} - Maximum Depth: {}'.format(game.level.desc, game.level.max_defined_steps))
             print('')
