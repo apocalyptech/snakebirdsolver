@@ -20,7 +20,6 @@ def report_game_end():
         game.print_winning_move_set(game.solution)
     #for csum in sorted(game.checksums.keys()):
     #    print(csum)
-    sys.exit(0)
 
 def ctrl_c_handler(signal, frame):
     print('')
@@ -29,6 +28,7 @@ def ctrl_c_handler(signal, frame):
     print('(Unlikely to be optimal!)')
     print('')
     report_game_end()
+    sys.exit(0)
 
 if __name__ == '__main__':
 
@@ -36,13 +36,11 @@ if __name__ == '__main__':
         description='Play or solve Snakebird levels',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    group = parser.add_mutually_exclusive_group()
-
-    group.add_argument('-i', '--interactive',
+    parser.add_argument('-i', '--interactive',
         action='store_true',
         help='Run interactively rather than in solver mode')
 
-    group.add_argument('-t', '--test',
+    parser.add_argument('-t', '--test',
         action='store_true',
         help='Generate python code suitable to put in our unit test for level solutions (see tests.py)')
 
@@ -68,34 +66,6 @@ if __name__ == '__main__':
 
     if args.interactive:
         game.interactive()
-    elif args.test:
-        dir_str = {
-            DIR_U: 'DIR_U',
-            DIR_D: 'DIR_D',
-            DIR_R: 'DIR_R',
-            DIR_L: 'DIR_L',
-        }
-        snake_str = {
-            SNAKE_RED: 'SNAKE_RED',
-            SNAKE_GREEN: 'SNAKE_GREEN',
-            SNAKE_BLUE: 'SNAKE_BLUE',
-        }
-        if game.level.preferred_algorithm == 'DFS':
-            game.solve_recurs()
-        elif game.level.preferred_algorithm == 'BFS':
-            game.solve_bfs()
-        else:
-            raise Exception('Unknown preferred algorithm: {}'.format(game.level.preferred_algorithm))
-        if game.solution is None:
-            if game.max_steps is None:
-                print('No solutions found!')
-            else:
-                print('No solutions found in {} turns!'.format(game.max_steps))
-        else:
-            print('        \'{}\': ['.format(args.level))
-            for (sb, direction) in game.solution:
-                print('            ({}, {}),'.format(snake_str[sb.color], dir_str[direction]))
-            print('        ],')
     else:
 
         if game.level.preferred_algorithm.upper() == 'DFS':
@@ -126,4 +96,27 @@ if __name__ == '__main__':
 
         else:
             raise Exception('Unknown preferred algorithm!')
+
+        # Report
         report_game_end()
+
+if args.test:
+    dir_str = {
+        DIR_U: 'DIR_U',
+        DIR_D: 'DIR_D',
+        DIR_R: 'DIR_R',
+        DIR_L: 'DIR_L',
+    }
+    snake_str = {
+        SNAKE_RED: 'SNAKE_RED',
+        SNAKE_GREEN: 'SNAKE_GREEN',
+        SNAKE_BLUE: 'SNAKE_BLUE',
+    }
+    if game.solution is not None:
+        print('')
+        print('Dict entry for tests.py follows:')
+        print('')
+        print('        \'{}\': ['.format(args.level))
+        for (sb, direction) in game.solution:
+            print('            ({}, {}),'.format(snake_str[sb.color], dir_str[direction]))
+        print('        ],')
