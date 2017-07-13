@@ -2,7 +2,6 @@
 # vim: set expandtab tabstop=4 shiftwidth=4:
 
 import sys
-import random
 import colorama
 
 # Check out THIS mess of inconsistently-named and weirdly-capitalized
@@ -1292,19 +1291,10 @@ class Game(object):
         is faster, though sometimes this one happens to win out, probably
         just due to luck.
 
-        For multi-snakebird solutions, we randomize our move choice before
-        looping through, to try and encourage snakebirds to move in tandem.
-        Otherwise we're likely to exhaust our max_steps moving a single
-        snakebird around before we even move the other.  This, of course,
-        adds some CPU processing time to each iteration since we're calling
-        a PRNG, but after very limited testing it seems to be worth it.
-
         Unless a level has `return_first_solution` defined, we'll continue
         to refine solutions until we've found the shortest one.  (Though
         of course a level may have more than one solution with the same
-        number of moves.  For single snakebird levels, we'll always return
-        the same one here, but it may be different in multi-snakebird levels,
-        thanks to the randomization mentioned above.)
+        number of moves.
         """
 
         if self.level.return_first_solution and self.solution is not None:
@@ -1336,25 +1326,21 @@ class Game(object):
         Our attempt at a breadth-first solver, inspired on
         https://github.com/david-westreicher/snakebird
 
-        Note that that solver is probably faster than ours
-        in general 'cause it's not so bogged down by spurious
-        classes, etc.  I suspect its overall implementation
-        is more efficient in all sorts of ways.  Ah well!
+        Note that that solver is probably faster than ours in general 'cause
+        it's not so bogged down by spurious classes, etc.  I suspect its
+        overall implementation is more efficient in all sorts of ways.  Ah
+        well!
 
-        In most cases, this is going to be faster than our
-        original recursive (DFS) implementation.  It still runs
-        into problems with multi-snake puzzles (as does David
-        Westreicher's version) when the step count is high
-        and there's not enough death situations to trim the
-        tree down.
+        In most cases, this is going to be faster than our original recursive
+        (DFS) implementation.  It still runs into problems with multi-snake
+        puzzles (as does David Westreicher's version) when the step count is
+        high and there's not enough death situations to trim the tree down.
 
         Occasionally our original method is quicker, though.
 
-        By definition, a solution found here will be the shortest
-        one available, though a level could have multiple solutions
-        with the same length.  This method should always return
-        the same one, though, even for multi-snakebird levels (unlike
-        our DFS solver).
+        By definition, a solution found here will be the shortest one
+        available, though a level could have multiple solutions with the same
+        length.
         """
         queue = [self.get_state(self.moves)[0]]
         for i in range(self.max_steps):
