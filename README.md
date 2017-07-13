@@ -10,11 +10,9 @@ http://store.steampowered.com/app/357300/Snakebird/
 ![Interactive Mode](sb_interactive.png) ![Auto-Solver](sb_solve.png)
 
 Puzzles with more than one snakebird, long snakebirds, or multiple
-pushable objects can go into the tens of minutes, or even hours to
-solve.  Some I've not let run to completion due to the extreme solve
-times.  The game in general doesn't really lend itself to bruteforce
-solving; there's just too many moving parts, and the possible action
-tree is often ridiculously wide and deep.
+pushable objects can easily exhaust system memory - it seems to be
+roughly 1GB/minute consumption, on my CPU.  Several of the more
+complex puzzles are effectively unsolveable on my own system.
 
 The game uses either of two algorithms to find solutions:
 breadth-first (the default) or depth-first.  Puzzles which are known
@@ -160,23 +158,18 @@ Performance
 ===========
 
 There are a few levels whose possible trees are deep and wide enough
-that I haven't let the solver run to completion.  Solve times for most
+that I haven't let the solver run to completion.  What will kill you
+is likely to be memory usage.  On my system it looks like it grows
+by roughly 1GB for every minute of processing.  Solve times for *most*
 levels will end up being under a minute, though, so in general it's
-not too bad.  So far I've not gotten it to solve any of the three-snakebird
-levels, though the last time I tried was on an earlier version whose
-performance wasn't nearly as good as it is now.  On that version, a
-solve attempt on Level 42 (with four pushables) got to nearly eight hours on a
-by-then badly swapping system before I cancelled it.
+not too bad.  Multi-snakebird levels, or levels with multiple pushable
+objects, tend to be the worst.
 
 A few levels benefit from specifying a maximum move count when using
 the depth-first search algorithm, even though Snakebird itself doesn't
 have such a concept.  It helps keep the tree down to a
-computationally-feasible size.  Level 11, for instance, takes a super
-long time unless you specify as small a max-steps as possible.  Even
-increasing from 35 to 40 makes the solve time take forever.  However,
-**with** a max step of 35, it ends up beating out the breadth-first
-algorithm.  Go figure.  So, for some of these I've set a max move
-count, knowing what the solutions already are, just to save on
+computationally-feasible size.  So, for some of these I've set a max
+move count, knowing what the solutions already are, just to save on
 processing time.  There's a default max move limit of 100, if one
 isn't specified in the level file - a few levels come close to that
 limit (and the solution to Star 4 is something like 140 steps long),
@@ -187,7 +180,7 @@ By default, the game will consider the loss of any pushable object to
 be a game loss, even though the real game allows it.  This is done to
 help trim the solving tree down a bit, since in general solutions
 require all the objects to be in place.  This can be overridden on a
-per-level basis with the "AllowPushableLoss" directive.
+per-level basis with the `AllowPushableLoss` directive.
 
 Current Solve Times
 ===================
@@ -210,78 +203,78 @@ I haven't tried many of the levels on DFS after implementing BFS, since
 it turned out BFS was in general so much more effective.  If an entry
 here is blank, it means that I've not even attempted solving the level
 with the given algorithm.  If I've tried but cancelled after it was
-clear it was going to take way too long, I've noted the cancellation
-time.
+clear it was going to take way too long, I've noted some relevant
+information about the system state at the cancellation time.
 
 All times were collected while running PyPy3, instead of CPython.
 
 Single Snakebird Levels
 -----------------------
 
-| Level         | Moves | BFS       | DFS           | Notes |
-| ------------- | ----- | --------- | ------------- | ----- |
-| **Level 0**   | 29    | **0:01**  | 0:02 (L)      |       |
-| **Level 1**   | 16    | **0:01**  | 0:01          |       |
-| **Level 2**   | 25    | **0:01**  | 0:02          |       |
-| **Level 3**   | 27    | **0:01**  | 0:02          |       |
-| **Level 4**   | 30    | **0:01**  | 0:01          |       |
-| **Level 5**   | 24    | **0:01**  | 0:01          |       |
-| **Level 6**   | 36    | **0:01**  | 0:01          |       |
-| **Level 10**  | 33    | **0:01**  | 0:04          |       |
-| **Level 11**  | 35    | 0:23      | **0:01** (L+) |       |
-| **Level 12**  | 52    | **0:02**  | 0:05 (L)      |       |
-| **Level 21**  | 39    | **0:02**  | 0:04 (L+)     |       |
-| **Level 22**  | 45    | **0:01**  | 0:02 (L)      | One Pushable  |
-| **Level 23**  | 53    | 3:04      |               | Two Pushables |
-| **Level 24**  | 26    | 0:11      |               | One Pushable  |
-| **Level 30**  | 15    | 0:01      |               | Teleporter    |
-| **Level 31**  | 8     | 0:01      |               | Teleporter    |
-| **Level 33**  | 42    | 0:01      |               | Teleporter    |
-| **Level 35**  | 29    | 0:01      |               | Teleporter    |
-| **Level 39**  | 53    | 0:07      |               | Two Pushables |
-| **Star 2**    | 60    | 0:03      |               |       |
+| Level         | Moves | BFS      | DFS           | Extras |
+| ------------- | ----- | -------- | ------------- | ------ |
+| **Level 0**   | 29    | **0:01** | 0:02 (L)      |        |
+| **Level 1**   | 16    | **0:01** | 0:01          |        |
+| **Level 2**   | 25    | **0:01** | 0:02          |        |
+| **Level 3**   | 27    | **0:01** | 0:02          |        |
+| **Level 4**   | 30    | **0:01** | 0:01          |        |
+| **Level 5**   | 24    | **0:01** | 0:01          |        |
+| **Level 6**   | 36    | **0:01** | 0:01          |        |
+| **Level 10**  | 33    | **0:01** | 0:04          |        |
+| **Level 11**  | 35    | 0:23     | **0:01** (L+) |        |
+| **Level 12**  | 52    | **0:02** | 0:05 (L)      |        |
+| **Level 21**  | 39    | **0:02** | 0:04 (L+)     |        |
+| **Level 22**  | 45    | **0:01** | 0:02 (L)      | One Pushable  |
+| **Level 23**  | 53    | 3:04     |               | Two Pushables |
+| **Level 24**  | 26    | 0:11     |               | One Pushable  |
+| **Level 30**  | 15    | 0:01     |               | Teleporter    |
+| **Level 31**  | 8     | 0:01     |               | Teleporter    |
+| **Level 33**  | 42    | 0:01     |               | Teleporter    |
+| **Level 35**  | 29    | 0:01     |               | Teleporter    |
+| **Level 39**  | 53    | 0:07     |               | Two Pushables |
+| **Star 2**    | 60    | 0:03     |               |        |
 
 Two-Snakebird Levels
 --------------------
 
-| Level         | Moves | BFS       | DFS           | Notes |
-| ------------- | ----- | --------- | ------------- | ----- |
-| **Level 7**   | 43    | 0:07      |               |       |
-| **Level 8**   | 29    | 0:14      |               |       |
-| **Level 9**   | 37    | 1:12      |               |       |
-| **Level 13**  | 44    | 0:13      |               |       |
-| **Level 14**  | 24    | **0:01**  | 0:03          |       |
-| **Level 15**  | 34    | 0:15      |               |       |
-| **Level 17**  | 68    | 0:04      |               |       |
-| **Level 18**  | 35    | 0:04      |               |       |
-| **Level 20**  | 50    | **0:04**  | 0:11 (L+)     |       |
-| **Level 25**  | 35    | 2:18      |               | One Pushable |
-| **Level 26**  | 35    | 0:05      |               | One Pushable |
-| **Level 27**  | 49    | 0:12      |               | One Pushable |
-| **Level 28**  | 49    | 1:00      |               | Two Pushables |
-| **Level 29**  |       | *(cancelled at 7.5hrs)* | | Four Pushables |
-| **Level 32**  | 21    | 0:02      |               | One Pushable, Teleporter |
-| **Level 34**  | 17    | 0:03      |               | One Pushable, Teleporter |
-| **Level 36**  | 29    | 0:12      |               | Teleporter |
-| **Level 37**  | 16    | 0:02      |               | Teleporter |
-| **Level 38**  | 28    | 0:18      |               | Teleporter |
-| **Level 40**  |       | *(cancelled at 2.75hrs)* | | Two Pushables |
-| **Level 41**  | 34    | **0:06**  | 0:43 (L+)     |       |
-| **Level 42**  | 42    | **0:03**  | 0:11 (L+)     |       |
-| **Level 43**  | 36    | 0:05      |               | One Pushable, requires `AllowPushableLoss` |
-| **Level 44**  | 36    | 0:04      |               | Teleporter |
-| **Level 45**  |       | *(cancelled at 2hrs)* |   | Two Pushables |
-| **Star 4**    |       | *(cancelled at 90min)* |  | Three Pushables |
-| **Star 5**    |       | *(cancelled at 90min)* |  | One Pushable, Teleporter |
+| Level         | Moves | BFS      | DFS       | Extras | Limits |
+| ------------- | ----- | -------- | --------- | ------ | ------ |
+| **Level 7**   | 43    | 0:07     |           |        |        |
+| **Level 8**   | 29    | 0:14     |           |        |        |
+| **Level 9**   | 37    | 1:12     |           |        |        |
+| **Level 13**  | 44    | 0:13     |           |        |        |
+| **Level 14**  | 24    | **0:01** | 0:03      |        |        |
+| **Level 15**  | 34    | 0:15     |           |        |        |
+| **Level 17**  | 68    | 0:04     |           |        |        |
+| **Level 18**  | 35    | 0:04     |           |        |        |
+| **Level 20**  | 50    | **0:04** | 0:11 (L+) |        |        |
+| **Level 25**  | 35    | 2:18     |           | One Pushable   |
+| **Level 26**  | 35    | 0:05     |           | One Pushable   |
+| **Level 27**  | 49    | 0:12     |           | One Pushable   |
+| **Level 28**  | 49    | 1:00     |           | Two Pushables  |
+| **Level 29**  |       | *n/a*    |           | Four Pushables | *8.5G res. mem @ depth 24, 7.5min* |
+| **Level 32**  | 21    | 0:02     |           | One Pushable, Teleporter |
+| **Level 34**  | 17    | 0:03     |           | One Pushable, Teleporter |
+| **Level 36**  | 29    | 0:12     |           | Teleporter |        |
+| **Level 37**  | 16    | 0:02     |           | Teleporter |        |
+| **Level 38**  | 28    | 0:18     |           | Teleporter |        |
+| **Level 40**  |       | *n/a*    |           | Two Pushables | *8.5G res. mem @ depth 36, 9min* |
+| **Level 41**  | 34    | **0:06** | 0:43 (L+) |        |        |
+| **Level 42**  | 42    | **0:03** | 0:11 (L+) |        |        |
+| **Level 43**  | 36    | 0:05     |           | One Pushable | Requires `AllowPushableLoss` |
+| **Level 44**  | 36    | 0:04     |           | Teleporter |    |
+| **Level 45**  |       | *n/a*    |           | Two Pushables | *9G res. mem @ depth 42, 8min* |
+| **Star 4**    |       | *n/a*    |           | Three Pushables | *9G res. mem @ depth 20, 7min* |
+| **Star 5**    | 69    | 0:42     |           | One Pushable, Teleporter |    |
 
 Three-Snakebird Levels
 ----------------------
 
-| Level           | Moves | BFS       | DFS           | Notes |
-| --------------- | ----- | --------- | ------------- | ----- |
-| **Level 16**    | 65    | 7:55      |               |       |
-| **Level 19** | *>80ish* | *infeasible* |            | *In BFS, reached 14G resident mem @ depth 19, after 22min* |
-| **Star 1**      |       |           |               | One Pushable |
-| **Star 3**      |       |           |               | One Pushable |
-| **Star 6**      |       |           |               | Three Pushables |
-| **??? (Space)** |       |           |               | One Pushable |
+| Level           | Moves | BFS   | Extras | Limits |
+| --------------- | ----- | ----- | ------ | ------ |
+| **Level 16**    | 65    | 7:55  |        |        |
+| **Level 19**    |       | *n/a* |        | *14G res. mem @ depth 19, 22min* |
+| **Star 1**      |       | *n/a* | One Pushable | *9G res. mem @ depth 12, 9min* |
+| **Star 3**      |       | *n/a* | One Pushable | *9G res. mem @ depth 25, 10min* |
+| **Star 6**      |       | *n/a* | Three Pushables | *9G res. mem @ depth 25, 10min* |
+| **??? (Space)** |       | *n/a* | One Pushable | *9G res. mem @ depth 28, 10.5min* |
