@@ -776,6 +776,8 @@ class Level(object):
                         self.fruits[(x,y)] = True
                     elif char in SNAKE_CHAR_MAP.keys():
                         color = SNAKE_CHAR_MAP[char]
+                        if color in self.snakebirds:
+                            raise Exception('ERROR: Snakebird {} defined twice.'.format(str(self.snakebirds[color])))
                         sb = Snakebird(color, self)
                         sb.set_initial_cell(x,y)
                         self.snakebirds[color] = sb
@@ -836,6 +838,10 @@ class Level(object):
         # Make sure that if we have one teleporter cell, we have two
         if teleporter_1 is not None and teleporter_2 is None:
             raise Exception('Only one teleporter found in level!')
+
+        # Make sure we have an exit!
+        if not have_exit:
+            raise Exception('No exit defined in file!')
 
         # Aaand populate our snake_coords dict
         self.populate_snake_coords()
