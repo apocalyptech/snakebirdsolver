@@ -1378,7 +1378,7 @@ class Game(object):
             next_queue = []
             if not quiet:
                 sys.stdout.write("\rAt depth: {}...".format(i))
-            sys.stdout.flush()
+                sys.stdout.flush()
             for state in queue:
                 self.moves = state.apply()
                 for sb in self.level.snakebirds_l:
