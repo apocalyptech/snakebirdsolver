@@ -14,12 +14,12 @@ pushable objects can easily exhaust system memory - it seems to be
 roughly 1GB/minute consumption, on my CPU.  Several of the more
 complex puzzles are effectively unsolveable on my own system.
 
-The game uses either of two algorithms to find solutions:
+The game uses one of two algorithms to find solutions:
 breadth-first (the default) or depth-first.  Puzzles which are known
 to work better with Depth-First are configured to default to that
-one instead (currently we have just one of those).  The Breadth-First
-attempt was inspired by another Snakebird solver on Github:
-https://github.com/david-westreicher/snakebird
+one instead, though currently that's only Level 11.  The
+Breadth-First attempt was inspired by another Snakebird solver on
+Github: https://github.com/david-westreicher/snakebird
 
 Note that Breadth-First Searching can get pretty memory intensive if
 the tree is wide and deep enough, since we've got to keep track of
@@ -27,8 +27,7 @@ game state along each path.  The solve process for Level 16 gets to
 about 6GB resident memory before it finds the solution.  Level 19 gets
 to 14GB before it's even gotten to depth/step number 20.  Depth-First
 should be a bit kinder to system memory, though it'll still chew up
-quite a bit remembering which game states we've seen before (to help
-trim the tree).
+quite a bit remembering which game states we've seen before.
 
 There are some tests in `tests.py` which just check the solver against
 known-good solutions for some of the more-quickly-solved puzzles.  Not
@@ -41,8 +40,8 @@ This should be runnable with any Python 3 (and probably Python 2),
 and will benefit from being run against PyPy/PyPy3.  Processing times
 should be at least halved when running with PyPy.
 
-The `colorama` Python module is required for some output colorization
-when running interactively.
+The `colorama` Python module is required, and used for some output
+colorization when running interactively.
 
 To solve a level:
 
@@ -70,10 +69,11 @@ out the app.
 Level Definition
 ================
 
-All Snakebird levels are included here, but for reference, here's
-what the level definition files look like.  The level definition
-files are just plaintext, and start off with a few directives at the
-top.  The directives are case-insensitive.
+All Snakebird levels are included in the `levels` directory.  For
+reference, here's what the level definition files look like.
+
+The level definition files are just plaintext, and start off with a few
+directives at the top.  The directives are case-insensitive.
 
     Alg: DFS
     Alg: BFS
@@ -92,10 +92,9 @@ than trying to refine and find a shorter solution.
 
 By default, if a pushable object is knocked off the edge (to fall into
 the water or whatever), the solver will consider that a losing
-condition, even though that doesn't actually match what Snakebird
-does.  Since the vast majority of levels require that all objects
-remain in play, though, we do this to help improve solve times.  One
-level does require that an object be sacrificed, though.
+condition, to improve solve times.  This directive overrides that
+default behavior.  We have one level which does require sacrificing
+an object (level 43).
 
     Max: <number>
 
@@ -105,17 +104,17 @@ also applies to Breadth-First as well.
 
     Decoration <num>: <number of lines>
 
-This directive specifies some optional "decorations" which are drawn
-on pushable objects - for instance, the ones which look like a plus
-sign or dumbbells.  The "connective tissue," so to speak, of those
-objects doesn't actually interact with the map at all, but it's kind
-of nice to have drawn on the map when playing interactively, so
-that's what this is for.  This directive is followed immediately by
-the number of lines specified after the colon, and uses the letter
-'O' to specify the "real" cells (only the very first one is
-required, actually - the rest are ignored), and the decorations are
-specified with a combination of pipes, dashes, and plus signs (`|`,
-`-`, and `+`).  For instance, in Level 25:
+Pushable objects in Snakebird often look like crosses or dumbbells,
+and the only parts which actually interact with the map are the ends.
+You can use this `Decoration` directive to add in "connective tissue"
+as Snakebird does.  The `<num>` corresponds to the number used later
+in the level definition section, and `<number of lines>` is how many
+lines immediately follow this directive.  Use the capital letter `O`
+to specify the "real" interactive parts of the pushable object, and
+a combination of pipes, dashes, and plus signs (`|`, `-`, `+`) for
+the connective tissue.  Only the very first `O` anchor point is
+required, actually -- the solver will ignore any other.  An example
+directive from Level 25 is:
 
 	Decoration 0: 5
 	  O
@@ -124,7 +123,9 @@ specified with a combination of pipes, dashes, and plus signs (`|`,
 	  |
 	  O
 
-The first number should match the number used in the level definition.
+Later in the `Level` section, the map uses the number `0` to place
+the object into the map, which is what matches the "Decoration 0"
+part of the definition.
 
 	Level: <identifier>
 
@@ -163,7 +164,8 @@ is likely to be memory usage.  On my system it looks like it grows
 by roughly 1GB for every minute of processing.  Solve times for *most*
 levels will end up being under a minute, though, so in general it's
 not too bad.  Multi-snakebird levels, or levels with multiple pushable
-objects, tend to be the worst.
+objects, tend to be the worst.  To date I've only solved one of the
+three-snakebird levels on my system.
 
 A few levels benefit from specifying a maximum move count when using
 the depth-first search algorithm, even though Snakebird itself doesn't
