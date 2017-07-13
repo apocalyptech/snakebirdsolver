@@ -406,8 +406,13 @@ class Snakebird(object):
     def fall(self):
         """
         Fall!  Could potentially be a no-op, of course.  Make sure to keep this
-        function in-line with Pushable.fall().  Returns `True` if we fell, and
-        `False` if not.
+        function in-line with Pushable.fall().
+
+        Returns a tuple containing two booleans:
+            * True/False for if we actually fell
+            * True/False for if we're supported by a "real" support, as opposed to
+              just another snakebird/pushable (useful for the main `check_fall`
+              routine to know if it should keep calling us or not)
         """
 
         if self.exited:
@@ -415,6 +420,10 @@ class Snakebird(object):
 
         # Find out what's beneath us
         (snakes, wall, spikes, void, fruit) = self.get_adjacents(DIR_D)
+
+        # Convenience vars for our main check_fall loop
+        self.fall_supports = snakes
+        self.will_destroy_if_fall = (spikes or void)
 
         # If we have a wall, fruit, or another snake/object under us, we won't fall
         if wall or fruit or len(snakes) > 0:
@@ -470,6 +479,12 @@ class Snakebird(object):
             return True
         else:
             return False
+
+    def destroy(self):
+        """
+        Destroys ourself (just raises an exception)
+        """
+        raise PlayerLose('Fell to your death!')
 
     def clone(self):
         newobj = Snakebird(self.color, self.level)
@@ -540,10 +555,15 @@ class Pushable(Snakebird):
 
     def fall(self):
         """
-        Fall!  Could potentially be a no-op, of course.  Returns `True` if we fell,
-        `False` otherwise.  (Note that we return `False` if we were destroyed by
-        a void tile, as well).  Make sure to keep this function in-line with
-        Snakebird.fall().
+        Fall!  Could potentially be a no-op, of course.  Make sure to keep this
+        function in-line with Snakebird.fall().
+
+        Returns a tuple containing two booleans:
+            * True/False for if we actually fell.  (We'll return `True` if we were
+              destroyed by a void tile.)
+            * True/False for if we're supported by a "real" support, as opposed to
+              just another snakebird/pushable (useful for the main `check_fall`
+              routine to know if it should keep calling us or not)
         """
 
         if len(self.cells) == 0:
@@ -552,6 +572,10 @@ class Pushable(Snakebird):
         # Find out what's beneath us
         (snakes, wall, spikes, void, fruit) = self.get_adjacents(DIR_D)
 
+        # Convenience vars for our main check_fall loop
+        self.fall_supports = snakes
+        self.will_destroy_if_fall = void
+
         # If we have a wall, fruit, spikes, or another snake/object under us, we won't fall
         if wall or fruit or spikes or len(snakes) > 0:
             return (False, wall or fruit or spikes)
@@ -559,9 +583,9 @@ class Pushable(Snakebird):
         # If we have void under us, we'll technically fall, but also disappear,
         # maybe causing a lose condition.
         if void:
-            self.cells = []
-            if self.level.die_on_pushable_loss:
-                raise PlayerLose('Lost a pushable object!')
+            self.destroy()
+            # The second boolean is technically incorrect, but will prevent us
+            # from being called again from the main check_fall loop.
             return (True, True)
 
         # Otherwise, we fall!  Woo.  Check for teleport indexes as we go
@@ -580,6 +604,14 @@ class Pushable(Snakebird):
 
         # We fell, so return true
         return (True, False)
+
+    def destroy(self):
+        """
+        Destroys ourself (ie: we fell into void)
+        """
+        self.cells = []
+        if self.level.die_on_pushable_loss:
+            raise PlayerLose('Lost a pushable object!')
 
     def clone(self):
         newobj = Pushable(self.desc, self.level)
@@ -874,6 +906,7 @@ class Level(object):
         """
         something_fell = True
         to_process = set(self.interactives)
+        supported_objs = set()
         while something_fell:
             something_fell = False
             for sb in to_process.copy():
@@ -882,8 +915,69 @@ class Level(object):
                     something_fell = True
                 elif supported:
                     to_process.remove(sb)
+                    supported_objs.add(sb)
+
+            # If nothing fell but we have objects left in to_process,
+            # we've got objects supported by other objects.  The supporting
+            # objects will either be supported themselves (in which case we
+            # can do nothing), but the other alternative is that we've got
+            # a more complex situation where objects appear to be supporting
+            # each other, such as:
+            #
+            #       ╔═   
+            #       ║G══ 
+            #       ╚R   
+            #
+            # Or, with a disjoint pushable object:
+            #
+            #         ▰    
+            #         B    
+            #       ▰─║─▰  
+            #         ║    
+            #         ▰    
+            #
+            # So, recursion of a sort needs to happen.
+
+            if not something_fell and len(to_process) > 0:
+                set_supported_obj = True
+                while set_supported_obj and len(to_process) > 0:
+                    set_supported_obj = False
+                    for sb in to_process.copy():
+                        if sb not in supported_objs:
+                            for sb_support in sb.fall_supports:
+                                if sb_support in supported_objs:
+                                    supported_objs.add(sb)
+                                    to_process.remove(sb)
+                                    set_supported_obj = True
+                                    break
+
+                # If we get here, anything left in to_process should
+                # fall as a group
+                if len(to_process) > 0:
+                    for sb in to_process.copy():
+                        for coord in sb.cells:
+                            del self.snake_coords[coord]
+                        if sb.will_destroy_if_fall:
+                            sb.destroy()
+                            to_process.remove(sb)
+                    for sb in to_process:
+                        teleport_idx = None
+                        for (idx, c) in enumerate(sb.cells.copy()):
+                            sb.cells[idx] = (c[0] + DIR_MODS[DIR_D][0], c[1] + DIR_MODS[DIR_D][1])
+                            self.snake_coords[sb.cells[idx]] = sb
+                            if sb.cells[idx] in self.teleporter:
+                                teleport_idx = idx
+                        if not sb.check_exit(clean_up_level_cells=True):
+                            if teleport_idx is not None:
+                                sb.process_teleport(teleport_idx, clean_up_level_cells=True)
+
+                    # ... aaand note that we fell.
+                    something_fell = True
+
+            # If we won, return!
             if self.won:
                 return True
+
         return False
 
     def print_level(self):
@@ -1186,6 +1280,10 @@ class Game(object):
                     print('-'*len(report_str))
                     print(report_str)
                     print('-'*len(report_str))
+                except Exception as e:
+                    print('Got exception!')
+                    self.print_debug_info()
+                    raise e
 
     def solve_recurs(self, quiet=False):
         """
