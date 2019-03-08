@@ -1,0 +1,13 @@
+Level: Primer 42
+
+    E
+
+
+    00
+     11
+   233
+   44
+    556
+     77
+ >Y 88
+wwwwwwwww

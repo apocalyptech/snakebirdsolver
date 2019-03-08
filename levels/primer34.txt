@@ -1,0 +1,12 @@
+Level: Primer 34
+
+       E
+
+      w      T
+           wwwww
+     w     wwwww
+       w   ww ww
+           w   w
+>Y T    w  w   w
+^wwww
+  ww

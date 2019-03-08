@@ -1,0 +1,9 @@
+Level: Primer 46
+
+      www
+      www  E
+        0
+  B<  1 00ww
+  >G  11 ww
+ www  wwwww
+wwwwwwwwww

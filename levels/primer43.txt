@@ -1,0 +1,9 @@
+Level: Primer 43
+
+ >Y
+www00
+   0
+   0    www
+   0
+ >B0     E
+wwwwwwwwwwww

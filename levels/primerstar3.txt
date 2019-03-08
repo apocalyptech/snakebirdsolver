@@ -1,0 +1,20 @@
+Level: Primer Star 3
+
+      wwwwwwww
+      www   ww
+   E  www   www
+      www   www
+  www www wwwww
+ wwww     wwwww
+ w  w w   wwww
+ w  w     wwww
+ww          w
+ww  w     w   w
+ w  w
+ w ww
+ www    >B
+ www    ^w
+  w     ^
+        ^
+        ^
+

@@ -1,0 +1,8 @@
+Level: Primer 33
+
+  w
+  w   T w
+E T
+  w   B<
+  wwwww^
+   www

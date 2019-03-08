@@ -1,0 +1,9 @@
+Level: Primer Star 4
+
+>>>R
+>>>Y          E
+>>>G
+>>>B          ww
+wwww         www
+www           ww
+ w            w

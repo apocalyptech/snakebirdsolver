@@ -1,0 +1,15 @@
+Max: 150
+Level: Primer Final
+
+wwwwww    00    wwwww
+wwwww      w    wwwww
+wwwww      w    wwwww
+   >B      11    wwww
+   >G       w    wwww
+   >Y       w
+   >R       w     E
+ wwww
+ wwww           %www
+  ww        %ww  wwww
+   w     ww  w   wwww
+         ww       www

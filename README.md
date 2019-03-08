@@ -1,11 +1,12 @@
 Snakebird Bruteforce Solver
 ===========================
 
-This is a bruteforce solver for the excellent puzzle game Snakebird,
-by Noumenon Games.
+This is a bruteforce solver for the excellent puzzle game Snakebird
+(and its cousin Snakebird Primer), by Noumenon Games.
 
 http://snakebird.noumenongames.com/
-http://store.steampowered.com/app/357300/Snakebird/
+https://store.steampowered.com/app/357300/Snakebird/
+https://store.steampowered.com/app/1014140/Snakebird_Primer/
 
 ![Interactive Mode](sb_interactive.png) ![Auto-Solver](sb_solve.png)
 
@@ -144,7 +145,7 @@ The following characters are used:
 * `F` - Fruit
 * `E` - Exit
 * `T` - Teleporter *(exactly two are required, if using teleporters)*
-* `R`/`G`/`B` - Snakebird Heads
+* `R`/`G`/`B`/`Y` - Snakebird Heads
 * `<`/`^`/`>`/`V` - Snakebird Bodies - should point towards the head.
   For instance, `G<<<` would indicate a green snakebird of length
   four, all pointing towards the left.
@@ -253,7 +254,7 @@ Two-Snakebird Levels
 | **Level 25**  | 35    | 2:18     |           | One Pushable   |
 | **Level 26**  | 35    | 0:05     |           | One Pushable   |
 | **Level 27**  | 49    | 0:12     |           | One Pushable   |
-| **Level 28**  | 49    | 1:00     |           | Two Pushables  |
+| **Level 28**  | 49    | 0:32     |           | Two Pushables  |
 | **Level 29**  |       | *n/a*    |           | Four Pushables | *8.5G res. mem @ depth 24, 7.5min* |
 | **Level 32**  | 21    | 0:02     |           | One Pushable, Teleporter |
 | **Level 34**  | 17    | 0:03     |           | One Pushable, Teleporter |
@@ -267,16 +268,127 @@ Two-Snakebird Levels
 | **Level 44**  | 36    | 0:04     |           | Teleporter |    |
 | **Level 45**  |       | *n/a*    |           | Two Pushables | *9G res. mem @ depth 42, 8min* |
 | **Star 4**    |       | *n/a*    |           | Three Pushables | *9G res. mem @ depth 20, 7min* |
-| **Star 5**    | 69    | 0:42     |           | One Pushable, Teleporter |    |
+| **Star 5**    | 69    | 0:29     |           | One Pushable, Teleporter |    |
 
 Three-Snakebird Levels
 ----------------------
 
 | Level           | Moves | BFS   | Extras | Limits |
 | --------------- | ----- | ----- | ------ | ------ |
-| **Level 16**    | 65    | 7:55  |        |        |
+| **Level 16**    | 65    | 5:22  |        |        |
 | **Level 19**    |       | *n/a* |        | *14G res. mem @ depth 19, 22min* |
 | **Star 1**      |       | *n/a* | One Pushable | *9G res. mem @ depth 12, 9min* |
 | **Star 3**      |       | *n/a* | One Pushable | *9G res. mem @ depth 25, 10min* |
 | **Star 6**      |       | *n/a* | Three Pushables | *9G res. mem @ depth 25, 10min* |
 | **??? (Space)** |       | *n/a* | One Pushable | *9G res. mem @ depth 28, 10.5min* |
+
+Snakebird Primer Solve Times
+============================
+
+There's not much reason to include Snakebird Primer on here, since it's
+by design *much* easier than the original Snakebird, but I like being
+thorough, and it was nice to take a quick trip back to the game.  There's
+a few levels in here which the solver can't quite get to on my system,
+as with the original Snakebird.  All of these are just breadth-first; I
+didn't try out DFS for any of them.
+
+Single Snakebird Levels
+-----------------------
+
+| Level             | Moves | BFS  | Extras |
+| ----------------- | ----- | ---- | ------ |
+| **Primer 1**      | 12    | 0:01 |        |
+| **Primer 2**      | 27    | 0:02 |        |
+| **Primer 3**      | 25    | 0:01 |        |
+| **Primer 4**      | 17    | 0:01 |        |
+| **Primer 5**      | 10    | 0:01 |        |
+| **Primer 6**      | 35    | 0:57 |        |
+| **Primer 7**      | 43    | 0:01 |        |
+| **Primer 8**      | 54    | 0:01 |        |
+| **Primer 9**      | 31    | 0:01 |        |
+| **Primer 10**     | 22    | 0:01 |        |
+| **Primer 17**     | 36    | 0:01 |        |
+| **Primer 18**     | 40    | 0:09 |        |
+| **Primer 19**     | 25    | 0:01 |        |
+| **Primer 20**     | 31    | 0:01 |        |
+| **Primer 21**     | 12    | 0:01 |        |
+| **Primer 22**     | 8     | 0:01 |        |
+| **Primer 23**     | 15    | 0:01 |        |
+| **Primer 24**     | 24    | 0:01 |        |
+| **Primer 25**     | 17    | 0:01 |        |
+| **Primer 26**     | 24    | 0:01 |        |
+| **Primer 27**     | 34    | 0:01 |        |
+| **Primer 28**     | 21    | 0:03 |        |
+| **Primer 29**     | 29    | 0:01 |        |
+| **Primer 30**     | 37    | 0:01 |        |
+| **Primer 31**     | 24    | 0:01 | Teleporter |
+| **Primer 32**     | 8     | 0:01 | Teleporter |
+| **Primer 33**     | 7     | 0:01 | Teleporter |
+| **Primer 34**     | 20    | 0:01 | Teleporter |
+| **Primer 35**     | 6     | 0:01 | Teleporter |
+| **Primer 36**     | 19    | 0:01 | One Pushable |
+| **Primer 37**     | 20    | 0:01 | One Pushable |
+| **Primer 38**     | 46    | 0:02 | One Pushable |
+| **Primer 39**     | 22    | 0:01 | One Pushable |
+| **Primer 40**     | 31    | 0:01 | Two Pushables |
+| **Primer 41**     | 21    | 0:03 | Seven Pushables |
+| **Primer 42**     | 21    | 0:05 | Nine Pushables |
+| **Primer 47**     | 19    | 0:01 |        |
+| **Primer 48**     | 32    | 0:01 |        |
+| **Primer 49**     | 18    | 0:02 |        |
+| **Primer 55**     | 22    | 0:01 | One Pushable |
+| **Primer 57**     | 36    | 0:01 |        |
+| **Primer 58**     | 41    | 0:01 |        |
+| **Primer 60**     | 8     | 0:01 | Teleporter |
+| **Primer 61**     | 9     | 0:01 | Teleporter |
+| **Primer 62**     | 9     | 0:01 | Teleporter |
+| **Primer 63**     | 19    | 0:01 | One Pushable, Teleporter |
+| **Primer 64**     | 50    | 0:02 | One Pushable |
+| **Primer Star 1** | 34    | 0:08 |        |
+| **Primer Star 3** | 64    | 0:01 |        |
+| **Primer Star 6** | 42    | 0:04 | One Pushable |
+
+Two-Snakebird Levels
+--------------------
+
+| Level             | Moves | BFS  | Extras |
+| ----------------- | ----- | ---- | ------ |
+| **Primer 11**     | 14    | 0:02 |        |
+| **Primer 12**     | 9     | 0:01 |        |
+| **Primer 13**     | 18    | 0:01 |        |
+| **Primer 14**     | 12    | 0:01 |        |
+| **Primer 15**     | 15    | 0:02 |        |
+| **Primer 16**     | 28    | 1:36 |        |
+| **Primer 43**     | 18    | 0:02 | One Pushable |
+| **Primer 44**     | 22    | 0:02 | One Pushable |
+| **Primer 45**     | 22    | 0:02 | One Pushable |
+| **Primer 46**     | 40    | 0:05 | Two Pushables |
+| **Primer 50**     | 16    | 0:03 |        |
+| **Primer 51**     | 16    | 0:02 |        |
+| **Primer 52**     | 25    | 0:02 |        |
+| **Primer 53**     | 22    | 0:05 |        |
+| **Primer 54**     | 22    | 0:04 |        |
+| **Primer 56**     | 23    | 0:04 |        |
+| **Primer 59**     | 25    | 0:03 | Two Pushables |
+| **Primer 65**     | 28    | 0:02 |        |
+| **Primer 66**     | 27    | 0:04 |        |
+| **Primer 68**     | 21    | 0:01 |        |
+| **Primer Star 5** | 22    | 0:04 | Teleporter |
+
+Three-Snakebird Levels
+----------------------
+
+| Level         | Moves | BFS  | Extras |
+| ------------- | ----- | ---- | ------ |
+| **Primer 67** | 21    | 2:59 | One Pushable |
+
+Four-Snakebird Levels
+---------------------
+
+| Level                    | Moves | BFS   | Extras | Limits |
+| ------------------------ | ----- | ----- | ------ | ------ |
+| **Primer 69**            |       | *n/a* |        | *(9G res. mem @ depth 11, 10min)* |
+| **Primer Star 2**        | 25    | 2:00  |        |        |
+| **Primer Star 4**        |       | *n/a* |        | *(9G res. mem @ depth 11, 10.5min)* |
+| **Primer Final (Space)** |       | *n/a* | Two Pushables  | *(9G res. mem @ depth 76, 15min)* |
+

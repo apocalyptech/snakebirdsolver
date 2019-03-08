@@ -1129,8 +1129,26 @@ class State(object):
         for fruit in self.fruits.keys():
             sumlist.append('f={}'.format(fruit))
         # TODO: Ditto re: combination
-        for sb in self.snakebirds_l:
-            sumlist.append('s-{}={}'.format(sb.color, sb.checksum()))
+
+        # Old snakebird checksum:
+        #for sb in self.snakebirds_l:
+        #    sumlist.append('s-{}={}'.format(sb.color, sb.checksum()))
+
+        # New snakebird checksum - snakebirds of the same length are
+        # considered interchangeable, basically.  If two snakebirds
+        # of the same length swap positions entirely, there's no logical
+        # difference between that and the original ordering.  This cuts
+        # down on the probability space for some multi-snakebird levels,
+        # and noticeably improves solve times for a handful of those,
+        # though it probably doesn't do so sufficiently to let us solve
+        # any levels which were exhausting memory previously.  (I have not
+        # thoroughly tested every previously-unsolveable level.)  It's
+        # possible the sorting in here will actually increase solve times
+        # for some levels, though from my testing that's pretty
+        # negligible if it does happen.
+        for full_checksum in sorted(['{}<s-{}'.format(sb.checksum(), len(sb)) for sb in self.snakebirds_l]):
+            sumlist.append(full_checksum)
+
         for obj in self.pushables.values():
             sumlist.append('p-{}={}'.format(obj.desc, obj.checksum()))
         return '|'.join(sumlist)

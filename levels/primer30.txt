@@ -1,0 +1,11 @@
+Level: Primer 30
+
+  E
+
+>>Y
+ ww     w
+ ww     ww
+  w     ww
+     FFF
+ ww     ww
+ ww     ww

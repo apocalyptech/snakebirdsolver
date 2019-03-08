@@ -1,0 +1,12 @@
+Level: Primer Star 5
+
+    T
+        T
+>R       G<
+^ww% %wwwwww
+^ww%  ww  www
+  w%    E ww
+  w%   wwww
+   % %ww
+   % %
+  wwww

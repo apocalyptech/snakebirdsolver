@@ -1,0 +1,13 @@
+Level: Primer 17
+
+        ww
+       wwww
+       wwww
+  E     ww
+
+ www    w
+ www
+  w           F
+        w
+>>>B        wwwww
+wwwww   w   wwww

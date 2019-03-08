@@ -1,0 +1,9 @@
+Level: Primer 49
+
+ww ww
+w E w
+
+ >R
+ ^w
+ ^FV
+ ^<<

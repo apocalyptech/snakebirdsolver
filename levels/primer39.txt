@@ -1,0 +1,17 @@
+Decoration 0: 5
+O
+|
+|
+|
+O
+Level: Primer 39
+
+     E
+
+   w  w
+    0
+
+  w   w
+
+>>R 0
+wwwwwwwww
