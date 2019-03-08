@@ -2,7 +2,7 @@
 # vim: set expandtab tabstop=4 shiftwidth=4:
 
 import unittest
-from snakebirdsolver.app import Game, DIR_U, DIR_D, DIR_L, DIR_R, DIR_T, SNAKE_RED, SNAKE_BLUE, SNAKE_GREEN
+from snakebirdsolver.app import Game, DIR_U, DIR_D, DIR_L, DIR_R, DIR_T, SNAKE_RED, SNAKE_BLUE, SNAKE_GREEN, SNAKE_YELLOW
 
 class LevelTests(unittest.TestCase):
     """

@@ -1,0 +1,10 @@
+Level: Primer 6
+
+     FF
+     ww  F
+     w   w
+  F    F
+  ww E ww F
+ F     w  w
+ wwwF>Y Fwww
+wwwwwwwwwwww

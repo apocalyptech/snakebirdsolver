@@ -1,0 +1,10 @@
+Level: Primer 5
+
+  B   ww
+  ^   ww
+ wwww  w
+www
+ww E F
+ww
+ wwww www
+ wwwwwwwww

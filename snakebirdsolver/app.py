@@ -52,16 +52,18 @@ SNAKE_CHARS = {
     (DIR_D | DIR_R): '╔',
 }
 
-(SNAKE_RED, SNAKE_BLUE, SNAKE_GREEN) = range(3)
+(SNAKE_RED, SNAKE_BLUE, SNAKE_GREEN, SNAKE_YELLOW) = range(4)
 SNAKE_T = {
     SNAKE_RED: 'Red',
     SNAKE_BLUE: 'Blue',
     SNAKE_GREEN: 'Green',
+    SNAKE_YELLOW: 'Yellow',
 }
 SNAKE_CHAR_MAP = {
     'R': SNAKE_RED,
     'G': SNAKE_GREEN,
     'B': SNAKE_BLUE,
+    'Y': SNAKE_YELLOW,
 }
 
 # Cell types
@@ -118,6 +120,7 @@ color_snake = {
     SNAKE_RED: colorama.Fore.RED,
     SNAKE_BLUE: colorama.Fore.BLUE,
     SNAKE_GREEN: colorama.Fore.GREEN,
+    SNAKE_YELLOW: colorama.Fore.YELLOW,
 }
 color_pushables = [
     colorama.Fore.WHITE+colorama.Back.YELLOW,

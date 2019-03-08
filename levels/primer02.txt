@@ -1,0 +1,10 @@
+Level: Primer 2
+
+  E
+   >G
+ www      F
+wwww       F
+ wwww     F F
+ www      wwww
+  ww    wwwwwww
+  wwwwwwwwwwwww

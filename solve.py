@@ -5,7 +5,7 @@ import os
 import sys
 import signal
 import argparse
-from snakebirdsolver.app import Level, Game, DIR_U, DIR_D, DIR_L, DIR_R, DIR_T, SNAKE_T, SNAKE_RED, SNAKE_BLUE, SNAKE_GREEN
+from snakebirdsolver.app import Level, Game, DIR_U, DIR_D, DIR_L, DIR_R, DIR_T, SNAKE_T, SNAKE_RED, SNAKE_BLUE, SNAKE_GREEN, SNAKE_YELLOW
 
 game = None
 
@@ -111,6 +111,7 @@ if args.test:
         SNAKE_RED: 'SNAKE_RED',
         SNAKE_GREEN: 'SNAKE_GREEN',
         SNAKE_BLUE: 'SNAKE_BLUE',
+        SNAKE_YELLOW: 'SNAKE_YELLOW',
     }
     if game.solution is not None:
         print('')
