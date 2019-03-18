@@ -48,6 +48,12 @@ mode, the following extra modules are required (both installable with
 
 The solver benefits greatly from being run with PyPy3.  Processing times
 will be at least halved when running with PyPy3 versus vanilla Python.
+Assuming PyPy3 is installed, the following will set up a PyPy3 venv
+with the necessary modules for interactive mode:
+
+    $ pypy3 -m venv solver_venv
+    $ . solver_venv/bin/activate
+    (solver_venv) $ pip install -r requirements.txt
 
 Usage
 =====
