@@ -76,10 +76,10 @@ what I just mentioned):
 
     ./solve.py -h
 
-Interactive mode uses `wasd` for navigation, `tab`/`c` to change
-between Snakebirds, `u` to undo, `r` to reset, and `q` to quit.
-Not the best way to play the game, really - I mostly use it just
-to test out the app.
+Interactive mode uses `wasd`/arrows for navigation, `tab`/`c` to
+change between Snakebirds, `u` to undo, `r` to reset, and `q` to
+quit.  Not the best way to play the game, really - I mostly use
+it just to test out the app.
 
 Level Definition
 ================

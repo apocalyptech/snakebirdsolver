@@ -32,6 +32,10 @@ DIR_CMD = {
     's': DIR_D,
     'a': DIR_L,
     'd': DIR_R,
+    '\x1b[a': DIR_U,
+    '\x1b[b': DIR_D,
+    '\x1b[d': DIR_L,
+    '\x1b[c': DIR_R,
 }
 DIR_MODS = {
     DIR_U: (0, -1),
@@ -1375,9 +1379,9 @@ class Game(object):
             # Whether to show full movement controls
             if full_control:
                 if len(self.level.snakebirds) > 1:
-                    ctrl_str = '[wasd] - movement, [tab/c]hange snakebirds, '
+                    ctrl_str = '[wasd/arrows] - movement, [tab/c]hange snakebirds, '
                 else:
-                    ctrl_str = '[wasd] - movement, '
+                    ctrl_str = '[wasd/arrows] - movement, '
             else:
                 ctrl_str = ''
 
@@ -1394,9 +1398,11 @@ class Game(object):
 
             valid_input = False
             while not valid_input:
-                cmd = readchar.readchar().lower()
+                cmd = readchar.readkey().lower()
                 if cmd == "\t":
                     report = '[tab]'
+                elif cmd in DIR_CMD and len(cmd) > 1:
+                    report = DIR_T[DIR_CMD[cmd]]
                 else:
                     report = cmd
 
