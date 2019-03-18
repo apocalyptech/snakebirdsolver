@@ -221,7 +221,10 @@ it turned out BFS was in general so much more effective.  If an entry
 here is blank, it means that I've not even attempted solving the level
 with the given algorithm.  If I've tried but cancelled after it was
 clear it was going to take way too long, I've noted some relevant
-information about the system state at the cancellation time.
+information about the system state at the cancellation time.  In general
+I've stopped them once they get to 9GB resident memory, since with
+the other stuff generally running on my system, that's about when I'd
+start swapping.
 
 All times were collected while running PyPy3, instead of CPython.
 
@@ -269,19 +272,19 @@ Two-Snakebird Levels
 | **Level 26**  | 35    | 0:05     |           | One Pushable   |
 | **Level 27**  | 49    | 0:12     |           | One Pushable   |
 | **Level 28**  | 49    | 0:32     |           | Two Pushables  |
-| **Level 29**  |       | *n/a*    |           | Four Pushables | *8.5G res. mem @ depth 24, 7.5min* |
+| **Level 29**  |       | *n/a*    |           | Four Pushables | *9G res. mem @ depth 29, 8min* |
 | **Level 32**  | 21    | 0:02     |           | One Pushable, Teleporter |
 | **Level 34**  | 17    | 0:03     |           | One Pushable, Teleporter |
 | **Level 36**  | 29    | 0:12     |           | Teleporter |        |
 | **Level 37**  | 16    | 0:02     |           | Teleporter |        |
 | **Level 38**  | 28    | 0:18     |           | Teleporter |        |
-| **Level 40**  |       | *n/a*    |           | Two Pushables | *8.5G res. mem @ depth 36, 9min* |
+| **Level 40**  |       | *n/a*    |           | Two Pushables | *9G res. mem @ depth 39, 10min* |
 | **Level 41**  | 34    | **0:06** | 0:43 (L+) |        |        |
 | **Level 42**  | 42    | **0:03** | 0:11 (L+) |        |        |
 | **Level 43**  | 36    | 0:05     |           | One Pushable | Requires `AllowPushableLoss` |
 | **Level 44**  | 36    | 0:04     |           | Teleporter |    |
-| **Level 45**  |       | *n/a*    |           | Two Pushables | *9G res. mem @ depth 42, 8min* |
-| **Star 4**    |       | *n/a*    |           | Three Pushables | *9G res. mem @ depth 20, 7min* |
+| **Level 45**  |       | *n/a*    |           | Two Pushables | *9G res. mem @ depth 44, 7min* |
+| **Star 4**    |       | *n/a*    |           | Three Pushables | *9G res. mem @ depth 21, 6.5min* |
 | **Star 5**    | 69    | 0:29     |           | One Pushable, Teleporter |    |
 
 Three-Snakebird Levels
@@ -290,11 +293,17 @@ Three-Snakebird Levels
 | Level           | Moves | BFS   | Extras | Limits |
 | --------------- | ----- | ----- | ------ | ------ |
 | **Level 16**    | 65    | 5:22  |        |        |
-| **Level 19**    |       | *n/a* |        | *14G res. mem @ depth 19, 22min* |
-| **Star 1**      |       | *n/a* | One Pushable | *9G res. mem @ depth 12, 9min* |
-| **Star 3**      |       | *n/a* | One Pushable | *9G res. mem @ depth 25, 10min* |
-| **Star 6**      |       | *n/a* | Three Pushables | *9G res. mem @ depth 25, 10min* |
-| **??? (Space)** |       | *n/a* | One Pushable | *9G res. mem @ depth 28, 10.5min* |
+| **Level 19**    |       | *n/a* |        | *9G res. mem @ depth 18, 12min* |
+| **Star 1**      |       | *n/a* | One Pushable | *9G res. mem @ depth 13, 8min* |
+| **Star 3**      |       | *n/a* | One Pushable | *9G res. mem @ depth 28, 10min* |
+| **Star 6**      |       | *n/a* | Three Pushables | *Exception at depth 27 after 4m!* |
+| **??? (Space)** |       | *n/a* | One Pushable | *9G res. mem @ depth 63, 10.5min* |
+
+*Recent (as of March 2019) updates to level state remembering and
+multi-snakebird efficiency allowed our solving of Star 6 to go past
+depth 25, and it turns out that there's a bug in the app somewhere
+which gets triggered on the 27th move of that level.  Will have to
+look into that!*
 
 Snakebird Primer Solve Times
 ============================
@@ -401,8 +410,8 @@ Four-Snakebird Levels
 
 | Level                    | Moves | BFS   | Extras | Limits |
 | ------------------------ | ----- | ----- | ------ | ------ |
-| **Primer 69**            |       | *n/a* |        | *(9G res. mem @ depth 11, 10min)* |
+| **Primer 69**            |       | *n/a* |        | *(9G res. mem @ depth 11, 8.5min)* |
 | **Primer Star 2**        | 25    | 2:00  |        |        |
-| **Primer Star 4**        |       | *n/a* |        | *(9G res. mem @ depth 11, 10.5min)* |
-| **Primer Final (Space)** |       | *n/a* | Two Pushables  | *(9G res. mem @ depth 76, 15min)* |
+| **Primer Star 4**        |       | *n/a* |        | *(9G res. mem @ depth 12, 9.5min)* |
+| **Primer Final (Space)** |       | *n/a* | Two Pushables  | *(9G res. mem @ depth 77, 12min)* |
 

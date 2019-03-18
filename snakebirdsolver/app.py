@@ -2,6 +2,7 @@
 # vim: set expandtab tabstop=4 shiftwidth=4 fileencoding=utf-8:
 
 import sys
+import struct
 
 # Check out THIS mess of inconsistently-named and weirdly-capitalized
 # constants and lookup vars.  CLASSY.
@@ -210,7 +211,7 @@ class Snakebird(object):
         self.level = level
         self.exited = False
         self.cells = []
-        self.checksum_id = SNAKE_T[self.color][0]
+        self.checksum_id = bytes(SNAKE_T[self.color][0], encoding='latin1')
 
     def __len__(self):
         return len(self.cells)
@@ -570,7 +571,7 @@ class Snakebird(object):
         self.exited = newobj.exited
 
     def checksum(self):
-        return ','.join([str(c) for c in self.cells])
+        return b''.join([struct.pack('BB', *c) for c in self.cells])
 
 class Pushable(Snakebird):
     """
@@ -586,7 +587,7 @@ class Pushable(Snakebird):
         self.level = level
         self.cells = []
         self.cells_decoration = []
-        self.checksum_id = desc
+        self.checksum_id = struct.pack('B', desc)
 
     def __str__(self):
         return 'Pushable {}'.format(self.desc)
@@ -698,9 +699,9 @@ class Pushable(Snakebird):
 
     def checksum(self):
         if len(self.cells) == 0:
-            return '-'
+            return b''
         else:
-            return str(self.cells[0])
+            return struct.pack('BB', *self.cells[0])
 
 class Level(object):
 
@@ -1163,17 +1164,47 @@ class State(object):
             return list(self.moves)
 
     def checksum(self):
+        """
+        Construct a "checksum" of our state so we can compare to see if we
+        have a loop while solving (to prune off the possibility tree).
+        Really this is more than a checksum, since it could theoretically
+        be used to save/restore gamestate in general.
+
+        The original version of this, from 2017 or so, was a basically human-
+        readable string.  In March 2019 I converted to a binary format (using
+        struct.pack()) which is rather more memory-efficient, and lets our
+        unsolveable puzzles get at least further along before I have to kill
+        it for excessive memory usage (though not by enough to make any
+        previously-unsolveable puzzles solveable).  A more noticeable bonus
+        is that it looks like this binary method is faster than the string
+        version, which makes sense in retrospect.
+        """
 
         sumlist = []
+
+        # Teleporter (just need to know if it's occupied or not)
+        # TODO: Though looking back on this in 2019: why exactly
+        # does this matter in terms of checksums?  Wouldn't this be
+        # implied by snakebird/pushable coords?  It makes sense that
+        # it's a useful bit of information to store in the object,
+        # but even if we were using these checksums as "real" save
+        # states, we'd theoretically be able to populate it on "load"
+        # based on the sb/push coords, yeah?
+        tp_list = []
         if len(self.level.teleporter) > 0:
             for (idx, (coord, occupier)) in enumerate(self.level.teleporter_occupied.items()):
                 if occupier is None:
-                    sumlist.append('t{}=-'.format(idx))
+                    tp_list.append(b'\xfe')
                 else:
-                    sumlist.append('t{}={}'.format(idx, occupier.checksum_id))
-        for fruit in self.fruits.keys():
-            sumlist.append('f={}'.format(fruit))
+                    tp_list.append(occupier.checksum_id)
+        sumlist.append(b''.join(tp_list))
+
+        # Fruit
+        sumlist.append(b''.join([struct.pack('BB', *fruit) for fruit in self.fruits.keys()]))
+
         # TODO: Ditto re: combination
+        # ^ I assume this refers to the note in State.__init__ but heck if
+        # I remember what I was on about, back then.
 
         # Old snakebird checksum:
         #for sb in self.snakebirds_l:
@@ -1185,18 +1216,18 @@ class State(object):
         # difference between that and the original ordering.  This cuts
         # down on the probability space for some multi-snakebird levels,
         # and noticeably improves solve times for a handful of those,
-        # though it probably doesn't do so sufficiently to let us solve
-        # any levels which were exhausting memory previously.  (I have not
-        # thoroughly tested every previously-unsolveable level.)  It's
-        # possible the sorting in here will actually increase solve times
-        # for some levels, though from my testing that's pretty
-        # negligible if it does happen.
-        for full_checksum in sorted(['{}<s-{}'.format(sb.checksum(), len(sb)) for sb in self.snakebirds_l]):
-            sumlist.append(full_checksum)
+        # though it doesn't do so sufficiently to let us solve any levels
+        # which were exhausting memory previously.  It's possible the
+        # sorting in here will actually increase solve times for some
+        # levels, though from my testing that's pretty negligible if
+        # it does happen.
+        sumlist.extend(sorted([sb.checksum() for sb in self.snakebirds_l]))
 
-        for obj in self.pushables.values():
-            sumlist.append('p-{}={}'.format(obj.desc, obj.checksum()))
-        return '|'.join(sumlist)
+        # Pushables
+        sumlist.append(b''.join([obj.checksum() for obj in self.pushables.values()]))
+
+        # Construct the full checksum
+        return b'\xff'.join(sumlist)
 
 class Game(object):
     
