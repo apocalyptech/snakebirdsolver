@@ -2,11 +2,12 @@ Snakebird Bruteforce Solver
 ===========================
 
 This is a bruteforce solver for the excellent puzzle game Snakebird
-(and its cousin Snakebird Primer), by Noumenon Games.
+(and its cousin Snakebird Primer), by Noumenon Games, and can be
+used as a console version of those games.
 
-http://snakebird.noumenongames.com/
-https://store.steampowered.com/app/357300/Snakebird/
-https://store.steampowered.com/app/1014140/Snakebird_Primer/
+- http://snakebird.noumenongames.com/
+- https://store.steampowered.com/app/357300/Snakebird/
+- https://store.steampowered.com/app/1014140/Snakebird_Primer/
 
 ![Interactive Mode](sb_interactive.png) ![Auto-Solver](sb_solve.png)
 
@@ -34,15 +35,22 @@ There are some tests in `tests.py` which just check the solver against
 known-good solutions for some of the more-quickly-solved puzzles.  Not
 actual unit tests, alas, but slightly better than nothing.
 
+Installation
+============
+
+There is no `setup.py` for this project, alas.  The base solver itself
+should be runnable on any Python 3 installation.  To run in interactive
+mode, the following extra modules are required (both installable with
+`pip`):
+
+- [readchar](https://pypi.org/project/readchar/)
+- [colorama](https://pypi.org/project/colorama/)
+
+The solver benefits greatly from being run with PyPy3.  Processing times
+will be at least halved when running with PyPy3 versus vanilla Python.
+
 Usage
 =====
-
-This should be runnable with any Python 3 (and probably Python 2),
-and will benefit from being run against PyPy/PyPy3.  Processing times
-should be at least halved when running with PyPy.
-
-The `colorama` Python module is required, and used for some output
-colorization when running interactively.
 
 To solve a level:
 
@@ -62,10 +70,10 @@ what I just mentioned):
 
     ./solve.py -h
 
-Interactive mode uses `wasd` for navigation, `c` to change between
-Snakebirds, `u` to undo, `r` to reset, and `q` to quit.  Not the
-best way to play the game, really - I mostly use it just to test
-out the app.
+Interactive mode uses `wasd` for navigation, `tab`/`c` to change
+between Snakebirds, `u` to undo, `r` to reset, and `q` to quit.
+Not the best way to play the game, really - I mostly use it just
+to test out the app.
 
 Level Definition
 ================

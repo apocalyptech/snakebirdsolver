@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-# vim: set expandtab tabstop=4 shiftwidth=4:
+# vim: set expandtab tabstop=4 shiftwidth=4 fileencoding=utf-8:
 
 import sys
-import colorama
 
 # Check out THIS mess of inconsistently-named and weirdly-capitalized
 # constants and lookup vars.  CLASSY.
@@ -104,48 +103,94 @@ pushable_char_map = {
     'V': '┬',
 }
 
-# Colors
-color_wall = {
-    TYPE_EMPTY: colorama.Style.RESET_ALL,
-    TYPE_WALL: colorama.Fore.BLACK,
-    TYPE_SPIKE: colorama.Fore.RED,
-    TYPE_EXIT: colorama.Fore.MAGENTA,
-    TYPE_VOID: colorama.Fore.RED,
-    TYPE_TELEPORTER: colorama.Fore.BLUE,
-}
-color_fruit = colorama.Fore.CYAN
-color_wall_exit_open = colorama.Fore.GREEN
-color_wall_exit_closed = colorama.Fore.MAGENTA
-color_snake = {
-    SNAKE_RED: colorama.Fore.RED,
-    SNAKE_BLUE: colorama.Fore.BLUE,
-    SNAKE_GREEN: colorama.Fore.GREEN,
-    SNAKE_YELLOW: colorama.Fore.YELLOW,
-}
-color_pushables = [
-    colorama.Fore.WHITE+colorama.Back.YELLOW,
-    colorama.Fore.WHITE+colorama.Back.MAGENTA,
-    colorama.Fore.WHITE+colorama.Back.CYAN,
-    colorama.Fore.WHITE+colorama.Back.RED,
-    colorama.Fore.WHITE+colorama.Back.GREEN,
-    colorama.Fore.WHITE+colorama.Back.BLUE,
-    colorama.Fore.CYAN+colorama.Back.MAGENTA,
-    colorama.Fore.CYAN+colorama.Back.BLUE,
-    colorama.Fore.CYAN+colorama.Back.YELLOW,
-    colorama.Fore.CYAN+colorama.Back.RED,
-]
-color_pushables_decoration = [
-    colorama.Fore.YELLOW,
-    colorama.Fore.MAGENTA,
-    colorama.Fore.CYAN,
-    colorama.Fore.RED,
-    colorama.Fore.GREEN,
-    colorama.Fore.BLUE,
-    colorama.Fore.MAGENTA,
-    colorama.Fore.BLUE,
-    colorama.Fore.YELLOW,
-    colorama.Fore.RED,
-]
+# Colors.
+try:
+    import colorama
+    color_wall = {
+        TYPE_EMPTY: colorama.Style.RESET_ALL,
+        TYPE_WALL: colorama.Fore.BLACK,
+        TYPE_SPIKE: colorama.Fore.RED,
+        TYPE_EXIT: colorama.Fore.MAGENTA,
+        TYPE_VOID: colorama.Fore.RED,
+        TYPE_TELEPORTER: colorama.Fore.BLUE,
+    }
+    color_fruit = colorama.Fore.CYAN
+    color_wall_exit_open = colorama.Fore.GREEN
+    color_wall_exit_closed = colorama.Fore.MAGENTA
+    color_snake = {
+        SNAKE_RED: colorama.Fore.RED,
+        SNAKE_BLUE: colorama.Fore.BLUE,
+        SNAKE_GREEN: colorama.Fore.GREEN,
+        SNAKE_YELLOW: colorama.Fore.YELLOW,
+    }
+    color_pushables = [
+        colorama.Fore.WHITE+colorama.Back.YELLOW,
+        colorama.Fore.WHITE+colorama.Back.MAGENTA,
+        colorama.Fore.WHITE+colorama.Back.CYAN,
+        colorama.Fore.WHITE+colorama.Back.RED,
+        colorama.Fore.WHITE+colorama.Back.GREEN,
+        colorama.Fore.WHITE+colorama.Back.BLUE,
+        colorama.Fore.CYAN+colorama.Back.MAGENTA,
+        colorama.Fore.CYAN+colorama.Back.BLUE,
+        colorama.Fore.CYAN+colorama.Back.YELLOW,
+        colorama.Fore.CYAN+colorama.Back.RED,
+    ]
+    color_pushables_decoration = [
+        colorama.Fore.YELLOW,
+        colorama.Fore.MAGENTA,
+        colorama.Fore.CYAN,
+        colorama.Fore.RED,
+        colorama.Fore.GREEN,
+        colorama.Fore.BLUE,
+        colorama.Fore.MAGENTA,
+        colorama.Fore.BLUE,
+        colorama.Fore.YELLOW,
+        colorama.Fore.RED,
+    ]
+    color_reset = colorama.Style.RESET_ALL
+except ModuleNotFoundError:
+    color_wall = {
+        TYPE_EMPTY: '',
+        TYPE_WALL: '',
+        TYPE_SPIKE: '',
+        TYPE_EXIT: '',
+        TYPE_VOID: '',
+        TYPE_TELEPORTER: '',
+    }
+    color_fruit = ''
+    color_wall_exit_open = ''
+    color_wall_exit_closed = ''
+    color_snake = {
+        SNAKE_RED: '',
+        SNAKE_BLUE: '',
+        SNAKE_GREEN: '',
+        SNAKE_YELLOW: '',
+    }
+    color_pushables = [
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+    ]
+    color_pushables_decoration = [
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+    ]
+    color_reset = ''
 
 class PlayerLose(Exception):
     """
@@ -576,7 +621,7 @@ class Pushable(Snakebird):
                 ret_dict[(self.cells[0][0]+rel_x, self.cells[0][1]+rel_y)] = '{}{}{}'.format(
                     color_pushables_decoration[self.desc],
                     disp_char,
-                    colorama.Style.RESET_ALL,
+                    color_reset,
                 )
         return ret_dict
 
@@ -1033,7 +1078,7 @@ class Level(object):
                 disp_pushable_coords[coords] = '{}{}{}'.format(
                         color_pushables[push_num],
                         PUSH_CHARS[push_num],
-                        colorama.Style.RESET_ALL,
+                        color_reset,
                     )
             disp_pushable_decorations.update(pushable.get_decoration_chars())
 
@@ -1058,7 +1103,7 @@ class Level(object):
                     sys.stdout.write(disp_pushable_decorations[(x,y)])
                 else:
                     sys.stdout.write('{}{}'.format(color_wall[col], TYPE_DISP_MAP[col]))
-            sys.stdout.write("{}\n".format(colorama.Style.RESET_ALL));
+            sys.stdout.write("{}\n".format(color_reset));
 
     def print_debug_info(self):
         """
@@ -1277,10 +1322,11 @@ class Game(object):
             print('Controlling {}{} Snakebird{}'.format(
                 color_snake[self.cur_snakebird.color],
                 SNAKE_T[self.cur_snakebird.color],
-                colorama.Style.RESET_ALL
+                color_reset,
             ))
 
     def interactive(self):
+        import readchar
         colorama.init(autoreset=True)
         while True:
             self.cur_snakebird = self.level.snakebirds_l[self.cur_snakebird_idx]
@@ -1295,46 +1341,71 @@ class Game(object):
             elif self.alive == False:
                 full_control = False
 
+            # Whether to show full movement controls
             if full_control:
-                print('[wasd] - movement, [c]hange snakebirds, [u]ndo, [r]eset, [q]uit, [i]nfo')
+                if len(self.level.snakebirds) > 1:
+                    ctrl_str = '[wasd] - movement, [tab/c]hange snakebirds, '
+                else:
+                    ctrl_str = '[wasd] - movement, '
             else:
-                print('[u]ndo, [r]eset, [q]uit, [i]nfo')
+                ctrl_str = ''
+
+            # Whether or not to enable undo command
+            if len(self.states) > 0:
+                undo_str = '[u]ndo, '
+            else:
+                undo_str = ''
+
+            # Show options
+            print('{}{}[r]eset, [q]uit, [i]nfo'.format(ctrl_str, undo_str))
             sys.stdout.write('[{}] > '.format(self.cur_steps + 1))
             sys.stdout.flush()
-            cmd = sys.stdin.readline()
-            cmd = cmd.strip()
-            if cmd == '':
-                continue
-            cmd = cmd[0].lower()
 
-            direction = None
-            if cmd == 'q':
-                return False
-            elif cmd == 'u':
-                self.undo()
-            elif cmd == 'r':
-                while len(self.states) > 0:
+            valid_input = False
+            while not valid_input:
+                cmd = readchar.readchar().lower()
+                if cmd == "\t":
+                    report = '[tab]'
+                else:
+                    report = cmd
+
+                direction = None
+                if cmd == 'q':
+                    print(report)
+                    return False
+                elif cmd == 'u':
+                    valid_input = True
                     self.undo()
-            elif cmd == 'i':
-                self.print_debug_info()
-            elif full_control and cmd == 'c':
-                self.cur_snakebird_idx = ((self.cur_snakebird_idx + 1) % len(self.level.snakebirds))
-                while self.level.snakebirds_l[self.cur_snakebird_idx].exited == True:
-                    self.cur_snakebird_idx = ((self.cur_snakebird_idx + 1) % len(self.level.snakebirds))
-            elif full_control and cmd in DIR_CMD:
-                direction = DIR_CMD[cmd]
-                try:
-                    self.move(self.cur_snakebird, DIR_CMD[cmd])
-                except PlayerLose as e:
-                    self.alive = False
-                    report_str = 'Player Death: {}'.format(e)
-                    print('-'*len(report_str))
-                    print(report_str)
-                    print('-'*len(report_str))
-                except Exception as e:
-                    print('Got exception!')
+                elif cmd == 'r':
+                    while len(self.states) > 0:
+                        valid_input = True
+                        self.undo()
+                elif cmd == 'i':
+                    valid_input = True
                     self.print_debug_info()
-                    raise e
+                elif full_control and len(self.level.snakebirds) > 1 and (cmd == 'c' or cmd == "\t"):
+                    valid_input = True
+                    self.cur_snakebird_idx = ((self.cur_snakebird_idx + 1) % len(self.level.snakebirds))
+                    while self.level.snakebirds_l[self.cur_snakebird_idx].exited == True:
+                        self.cur_snakebird_idx = ((self.cur_snakebird_idx + 1) % len(self.level.snakebirds))
+                elif full_control and cmd in DIR_CMD:
+                    valid_input = True
+                    direction = DIR_CMD[cmd]
+                    try:
+                        self.move(self.cur_snakebird, DIR_CMD[cmd])
+                    except PlayerLose as e:
+                        self.alive = False
+                        report_str = 'Player Death: {}'.format(e)
+                        print('-'*len(report_str))
+                        print(report_str)
+                        print('-'*len(report_str))
+                    except Exception as e:
+                        print('Got exception!')
+                        self.print_debug_info()
+                        raise e
+
+                if valid_input:
+                    print(report)
 
     def solve_recurs(self, quiet=False):
         """
