@@ -50,8 +50,8 @@ if __name__ == '__main__':
         help='Level file to run')
 
     parser.add_argument('-a', '--algorithm',
-        choices=('BFS', 'DFS', 'bfs', 'dfs'),
-        help='Algorithm to use: Breadth-First Search or Depth-First Search')
+        choices=('BFS', 'DFS', 'bfs', 'dfs', 'A*', 'ASTAR', 'A-STAR'),
+        help='Algorithm to use: Breadth-First Search, Depth-First Search, or A*')
 
     args = parser.parse_args()
 
@@ -82,7 +82,9 @@ if __name__ == '__main__':
         game.interactive()
     else:
 
-        if game.level.preferred_algorithm.upper() == 'DFS':
+        algorithm_name = game.level.preferred_algorithm.upper()
+
+        if algorithm_name == 'DFS':
             print('Using depth-first search algorithm')
             print('Solving {} - Maximum Steps: {}'.format(game.level.desc, game.level.max_defined_steps))
             if game.level.return_first_solution:
@@ -98,12 +100,22 @@ if __name__ == '__main__':
                 game.print_debug_info(e)
                 raise e
 
-        elif game.level.preferred_algorithm.upper() == 'BFS':
+        elif algorithm_name == 'BFS':
             print('Using breadth-first search algorithm')
             print('Solving {} - Maximum Depth: {}'.format(game.level.desc, game.level.max_defined_steps))
             print('')
             try:
                 game.solve_bfs()
+            except Exception as e:
+                game.print_debug_info(e)
+                raise e
+
+        elif algorithm_name == 'A*' or ''.join(c for c in algorithm_name if c.isalpha()) == 'ASTAR':
+            print('Using A* search algorithm')
+            print('Solving {} - Maximum Depth: {}'.format(game.level.desc, game.level.max_defined_steps))
+            print('')
+            try:
+                game.solve_a_star()
             except Exception as e:
                 game.print_debug_info(e)
                 raise e
