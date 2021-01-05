@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # vim: set expandtab tabstop=4 shiftwidth=4 fileencoding=utf-8:
 
+import collections
+import heapq
 import sys
 import struct
 
@@ -234,6 +236,13 @@ class Snakebird(object):
             new_cell = body_pointers[self.cells[-1]]
             del body_pointers[self.cells[-1]]
             self.cells.append(new_cell)
+
+    def decapitate(self):
+        """
+        Extract head and facing direction
+        """
+        head, neck = self.cells[:2]
+        return (head, (head[0] - neck[0], head[1] - neck[1]))
 
     def compute_display_chars(self):
         """
@@ -729,6 +738,8 @@ class Level(object):
         self.die_on_pushable_loss = True
         self.teleporter = {}
         self.teleporter_occupied = {}
+        self.exit = None
+        self.distance_cache = {}
 
         # We give ourselves room around the outside of the map
         # in case solutions involve going outside the level
@@ -739,7 +750,6 @@ class Level(object):
         self.max_seen_y = 0
 
         # Read in the whole file
-        have_exit = False
         with open(filename, 'r') as df:
 
             key = ''
@@ -810,10 +820,10 @@ class Level(object):
                     if char in TYPE_CHAR_MAP.keys():
                         self.set_map_char(x, y, char)
                         if char == 'E':
-                            if have_exit:
+                            if self.exit is not None:
                                 raise Exception('More than one exit found!')
                             else:
-                                have_exit = True
+                                self.exit = (x, y)
                         elif char == 'T':
                             if teleporter_1 is None:
                                 teleporter_1 = (x,y)
@@ -875,6 +885,9 @@ class Level(object):
         for sb in self.snakebirds_l:
             sb.finish(body_pointers)
 
+        # Upper bound on possible snakebird length
+        self.snakebird_length_max = max(len(sb.cells) for sb in self.snakebirds_l) + len(self.fruits)
+
         # Make sure we've used up all our body pointers
         if len(body_pointers) > 0:
             raise Exception('Not all body pointers were used up!')
@@ -893,7 +906,7 @@ class Level(object):
             raise Exception('Only one teleporter found in level!')
 
         # Make sure we have an exit!
-        if not have_exit:
+        if self.exit is None:
             raise Exception('No exit defined in file!')
 
         # Aaand populate our snake_coords dict
@@ -913,7 +926,7 @@ class Level(object):
             added_rows = True
         if added_rows:
             self.max_seen_y = y + 1
-        
+
         # Create new columns we haven't seen yet
         added_cols = False
         for row in self.cells:
@@ -1233,6 +1246,93 @@ class State(object):
         # Construct the full checksum
         return b'\xff'.join(sumlist)
 
+    def shortest_path(self, starting_point, goal, only_one_snakebird):
+        """
+        An underestimate of the cost of moving a snakebird between two (position, orientation) pairs,
+        or from a (position, orientation) pair to a given position. The cache hit rate should be
+        essentially 100% for hard levels, so performance doesn't matter too much.
+        Also uses whether there is only one remaining snakebird, for a tiny bit of additional pruning.
+        """
+        key = (starting_point, goal, only_one_snakebird)
+        if key in self.level.distance_cache:
+            return self.level.distance_cache[key]
+        open_list = [(0, starting_point)]
+        min_cost = collections.defaultdict(lambda: float('inf'))
+        obstacles = (TYPE_WALL, TYPE_SPIKE, TYPE_VOID)
+        while open_list:
+            cost, node = heapq.heappop(open_list)
+            if cost > min_cost[node]:
+                continue
+            position, direction = node
+            for reached in (node, position):
+                if reached == goal:
+                    self.level.distance_cache[key] = cost
+                    return cost
+            #Very conservative approximation if there are teleporters
+            for t_from, t_to in self.level.teleporter.items():
+                if abs(position[0] - t_from[0]) + abs(position[1] - t_from[1]) < self.level.snakebird_length_max:
+                    position1 = (position[0] + t_to[0] - t_from[0], position[1] + t_to[1] - t_from[1])
+                    if self.level.cells[position1[1]][position1[0]] in obstacles:
+                        continue
+                    node1 = (position1, direction)
+                    if cost < min_cost[node1]:
+                        min_cost[node1] = cost
+                        heapq.heappush(open_list, (cost, node1))
+            for ((dx, dy), edge_cost) in zip([(-1, 0), (1, 0), (0, -1), (0, 1), (0, 1)], [1] * 4 + [0]):
+                position1 = (position[0] + dx, position[1] + dy)
+                if self.level.cells[position1[1]][position1[0]] in obstacles:
+                    continue
+                cost1 = cost + edge_cost
+                #Account for freefall and pushing
+                if edge_cost and (-dx, -dy) != direction:
+                    directions = [direction, (dx, dy)]
+                else:
+                    if edge_cost and only_one_snakebird:
+                        continue
+                    directions = [direction]
+                for direction1 in directions:
+                    node1 = (position1, direction1)
+                    if cost1 < min_cost[node1]:
+                        min_cost[node1] = cost1
+                        heapq.heappush(open_list, (cost1, node1))
+        self.level.distance_cache[key] = float('inf')
+        return float('inf')
+
+    def plan_paths(self, starting_points, goals, reverse=False):
+        """
+        For each goal, finds the cost of the cheapest path to achieve that goal over all starting points.
+        If reverse=True, then the snakebirds are moving from the goals to the starting points.
+        """
+        only_one_snakebird = sum(1 for sb in self.snakebirds_l if not sb.exited) == 1
+        min_cost = {}
+        plan_path = lambda s, g: self.shortest_path(*((g, s) if reverse else (s, g)), only_one_snakebird)
+        for g in goals:
+            min_cost[g] = min(plan_path(s, g) for s in starting_points)
+        return min_cost
+
+    def heuristic(self):
+        """
+        Calculate an underestimate of the remaining number of steps to solve the puzzle.
+        Treats each snakebird as a flying head and conservatively considers only the most expensive subgoal
+        (snakebird -> exit or snakebird -> fruit -> exit). Usually quite weak, but can still help a lot.
+        """
+        directions = list(DIR_MODS.values())
+        sb_heads = [sb.decapitate() for sb in self.snakebirds_l if not sb.exited]
+        exits = [(self.level.exit, direction) for direction in directions]
+
+        sb_to_exit_max = max(self.plan_paths(exits, sb_heads, reverse=True).values())
+
+        if not self.fruits:
+            return sb_to_exit_max
+
+        fruits = [(fruit, direction) for fruit in self.fruits for direction in directions]
+        fruit_to_exit = self.plan_paths(exits, fruits, reverse=True)
+        sb_to_fruit = self.plan_paths(sb_heads, fruits)
+        h = sb_to_exit_max
+        for fruit in self.fruits:
+            h = max(h, min(sb_to_fruit[(fruit, direction)] + fruit_to_exit[(fruit, direction)] for direction in directions))
+        return h
+
 class Game(object):
     
     def __init__(self, filename):
@@ -1268,17 +1368,26 @@ class Game(object):
             state = State(self.level)
         self.states.append(state)
 
-    def get_state(self, moves=None):
+    def get_state(self, moves=None, steps=None):
         """
         Get our state.  Optionally pass in `moves` if you're using
-        a BFS solver and need to hold on to moves
+        a BFS solver and need to hold on to moves. Can also pass
+        in the current number of steps, for A*.
         """
+        return_checksum = True
+        if steps is None:
+            steps = self.cur_steps
+            return_checksum = False
         state = State(self.level, moves)
         checksum = state.checksum()
         if checksum in self.checksums:
-            if self.cur_steps >= self.checksums[checksum]:
+            if steps >= self.checksums[checksum]:
+                if return_checksum:
+                    return (state, False, checksum)
                 return (state, False)
-        self.checksums[checksum] = self.cur_steps
+        self.checksums[checksum] = steps
+        if return_checksum:
+            return (state, True, checksum)
         return (state, True)
 
     def pop_state(self):
@@ -1502,7 +1611,7 @@ class Game(object):
         available, though a level could have multiple solutions with the same
         length.
         """
-        queue = [self.get_state(self.moves)[0]]
+        queue = [self.get_state(moves=self.moves)[0]]
         for i in range(self.max_steps):
             next_queue = []
             if not quiet:
@@ -1521,7 +1630,7 @@ class Game(object):
                                         print('')
                                     self.store_winning_moves(quiet=quiet, display_moves=False)
                                     return
-                                (new_state, is_new_state) = self.get_state(self.moves)
+                                (new_state, is_new_state) = self.get_state(moves=self.moves)
                                 if is_new_state:
                                     next_queue.append(new_state)
                             except PlayerLose:
@@ -1531,6 +1640,48 @@ class Game(object):
                 break
         if not quiet:
             print('')
+
+    def solve_a_star(self, quiet=False):
+        """
+        An A* solver, which often improves on the BFS solver for hard levels. Can still be slow and memory-hungry.
+        """
+        state, _, checksum = self.get_state(moves=self.moves, steps=0)
+        self.checksums[checksum] = 0
+        queue = [(0, 0, checksum, state)]
+        max_depth = -1
+        while queue:
+            f, neg_g, checksum, state = heapq.heappop(queue)
+            g = -neg_g
+            if g > self.checksums[checksum]:
+                continue
+            if g > max_depth:
+                if g == self.max_steps:
+                    continue
+                if not quiet:
+                    sys.stdout.write("\rAt depth: {}...".format(g))
+                    sys.stdout.flush()
+                max_depth = g
+            self.moves = state.apply()
+            for sb in self.level.snakebirds_l:
+                if sb.exited:
+                    continue
+                for direction in DIRS:
+                    self.moves = state.apply()
+                    try:
+                        self.move(sb, direction, state)
+                        if self.level.won:
+                            if not quiet:
+                                print('')
+                            self.store_winning_moves(quiet=quiet, display_moves=False)
+                            return
+                        g1 = g + 1
+                        (new_state, is_new_state, new_checksum) = self.get_state(moves=self.moves, steps=g1)
+                        if is_new_state:
+                            h1 = new_state.heuristic()
+                            if h1 != float('inf'):
+                                heapq.heappush(queue, (g1 + h1, -g1, new_checksum, new_state))
+                    except PlayerLose:
+                        pass
 
     def print_debug_info(self, e=None):
         """

@@ -3756,19 +3756,26 @@ class LevelTests(unittest.TestCase):
         print('')
         for (levelname, methods) in levels:
             with self.subTest(level=levelname):
-                for method in methods:
-                    self.assertIn(method, ['bfs', 'dfs'])
+                for method in methods + ['A*']:
+                    self.assertIn(method, ['bfs', 'dfs', 'A*'])
                     with self.subTest(method=method):
                         print('Testing {} by {}'.format(levelname, method))
                         game = Game(levelname)
                         if method == 'bfs':
                             game.solve_bfs(quiet=True)
-                        else:
+                        elif method == 'dfs':
                             game.solve_recurs(quiet=True)
+                        elif method == 'A*':
+                            game.solve_a_star(quiet=True)
+                        else:
+                            self.assertFalse()
                         bare_solution = []
                         for (sb, direction) in game.solution:
                             bare_solution.append((sb.color, direction))
-                        self.assertEqual(bare_solution, self.solutions[levelname])
+                        if method == 'A*':
+                            self.assertEqual(len(bare_solution), len(self.solutions[levelname]))
+                        else:
+                            self.assertEqual(bare_solution, self.solutions[levelname])
 
 if __name__ == '__main__':
 
